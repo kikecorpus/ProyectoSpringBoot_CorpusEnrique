@@ -10,6 +10,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.PersonaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class PersonaServiceImpl implements PersonaService {
 
     private final PersonaMapper personaMapper;
     private final PersonaRepository personaRepository;
-
+    @Transactional
     @Override
     public PersonaResponse guardarPersona(PersonaRequest dto) {
         if (personaRepository.existsByNumeroDocumento(dto.numeroDocumento())) {
@@ -44,7 +45,7 @@ public class PersonaServiceImpl implements PersonaService {
                 .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + id));
         return personaMapper.entidadADto(p);
     }
-
+    @Transactional
     @Override
     public PersonaResponse actualizarPersona(Long id, PersonaRequest dto) {
         Persona p = personaRepository.findById(id)
@@ -57,7 +58,7 @@ public class PersonaServiceImpl implements PersonaService {
         personaRepository.save(p);
         return personaMapper.entidadADto(p);
     }
-
+    @Transactional
     @Override
     public void eliminarPersona(Long id) {
         if (!personaRepository.existsById(id)) {

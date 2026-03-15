@@ -14,6 +14,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.InventarioService
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class InventarioServiceImpl implements InventarioService {
     private final InventarioRepository inventarioRepository;
     private final ProductoRepository productoRepository;
     private final BodegaRepository bodegaRepository;
-
+    @Transactional
     @Override
     public InventarioResponse guardarInventario(InventarioRequest dto) {
         if (inventarioRepository.existsByProductoIdProductoAndBodegaIdBodega(dto.productoId(), dto.bodegaId())) {
@@ -58,7 +59,7 @@ public class InventarioServiceImpl implements InventarioService {
                 .orElseThrow(() -> new EntityNotFoundException("Inventario no encontrado con id: " + id));
         return inventarioMapper.entidadADto(i);
     }
-
+    @Transactional
     @Override
     public InventarioResponse actualizarInventario(Long id, InventarioRequest dto) {
         Inventario i = inventarioRepository.findById(id)
@@ -75,7 +76,7 @@ public class InventarioServiceImpl implements InventarioService {
         inventarioRepository.save(i);
         return inventarioMapper.entidadADto(i);
     }
-
+    @Transactional
     @Override
     public void eliminarInventario(Long id) {
         if (!inventarioRepository.existsById(id)) {

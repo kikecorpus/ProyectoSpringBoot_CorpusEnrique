@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Auditoria", description = "Operaciones relacionadas con Bodegas")
+@Tag(name = "Bodega", description = "Operaciones relacionadas con Bodegas")
 @RestController
 @RequestMapping("/api/bodega")
 @RequiredArgsConstructor

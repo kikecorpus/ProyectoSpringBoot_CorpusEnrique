@@ -11,11 +11,4 @@ public interface AuditoriaService {
     List<AuditoriaResponse> listarPorEntidad(String entidadAfectada);
     List<AuditoriaResponse> listarPorUsuario(Long usuarioId);
 
-
-    void registrarAuditoria(Long usuarioId,
-                            String entidadAfectada,
-                            Long registroId,
-                            TipoOperacion tipoOperacion,
-                            Map<String, Object> valoresAnteriores,
-                            Map<String, Object> valoresNuevos);
 }

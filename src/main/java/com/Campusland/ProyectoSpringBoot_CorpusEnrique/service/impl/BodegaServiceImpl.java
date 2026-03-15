@@ -14,6 +14,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.BodegaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class BodegaServiceImpl implements BodegaService {
     private final UsuarioRepository usuarioRepository;
 
     @Override
+    @Transactional
     public BodegaResponse guardarBodega(BodegaRequest dto) {
         if (bodegaRepository.existsByNombre(dto.nombre())) {
             throw new BusinessRuleException("Ya existe una bodega con el nombre: " + dto.nombre());
@@ -55,7 +57,7 @@ public class BodegaServiceImpl implements BodegaService {
                 .orElseThrow(() -> new EntityNotFoundException("Bodega no encontrada con id: " + id));
         return bodegaMapper.entidadADto(b);
     }
-
+    @Transactional
     @Override
     public BodegaResponse actualizarBodega(Long id, BodegaRequest dto) {
         Bodega b = bodegaRepository.findById(id)
@@ -72,7 +74,7 @@ public class BodegaServiceImpl implements BodegaService {
         bodegaRepository.save(b);
         return bodegaMapper.entidadADto(b);
     }
-
+    @Transactional
     @Override
     public void eliminarBodega(Long id) {
         if (!bodegaRepository.existsById(id)) {

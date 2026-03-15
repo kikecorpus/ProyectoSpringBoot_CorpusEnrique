@@ -5,7 +5,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.MovimientoIn
 import java.util.List;
 
 public interface MovimientoInventarioService {
-    MovimientoInventarioResponse registrarMovimiento(MovimientoInventarioRequest dto, Long usuarioId);
+    MovimientoInventarioResponse registrarMovimiento(MovimientoInventarioRequest dto, String username);
     List<MovimientoInventarioResponse> listarMovimientos();
     MovimientoInventarioResponse obtenerMovimientoPorId(Long id);
     List<MovimientoInventarioResponse> listarMovimientosPorInventario(Long inventarioId);

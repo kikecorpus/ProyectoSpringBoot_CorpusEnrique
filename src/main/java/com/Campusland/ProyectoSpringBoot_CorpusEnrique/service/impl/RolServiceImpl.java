@@ -10,6 +10,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.RolService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class RolServiceImpl implements RolService {
 
     private final RolMapper rolMapper;
     private final RolRepository rolRepository;
-
+    @Transactional
     @Override
     public RolResponse guardarRol(RolRequest dto) {
         if (rolRepository.existsByNombre(dto.nombre())) {
@@ -44,7 +45,7 @@ public class RolServiceImpl implements RolService {
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con id: " + id));
         return rolMapper.entidadADto(r);
     }
-
+    @Transactional
     @Override
     public RolResponse actualizarRol(Long id, RolRequest dto) {
         Rol r = rolRepository.findById(id)
@@ -56,7 +57,7 @@ public class RolServiceImpl implements RolService {
         rolRepository.save(r);
         return rolMapper.entidadADto(r);
     }
-
+    @Transactional
     @Override
     public void eliminarRol(Long id) {
         if (!rolRepository.existsById(id)) {

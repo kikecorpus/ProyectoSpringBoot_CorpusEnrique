@@ -1,4 +1,4 @@
-package com.inventario.audit;
+package com.Campusland.ProyectoSpringBoot_CorpusEnrique.model;
 
 // ============================================================
 // Anotacion personalizada para marcar entidades auditables

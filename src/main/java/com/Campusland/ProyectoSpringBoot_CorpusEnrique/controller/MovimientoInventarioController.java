@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,12 +34,11 @@ public class MovimientoInventarioController {
     })
     @PostMapping
     public ResponseEntity<MovimientoInventarioResponse> registrar(
-            @Valid @RequestBody MovimientoInventarioRequest dto,
-            @RequestParam Long usuarioId) {
+            @Valid @RequestBody MovimientoInventarioRequest dto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(movimientoService.registrarMovimiento(dto, usuarioId));
+                .body(movimientoService.registrarMovimiento(dto, username));
     }
-
     @Operation(summary = "Listar registros", description = "Retorna todos los registros disponibles")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),

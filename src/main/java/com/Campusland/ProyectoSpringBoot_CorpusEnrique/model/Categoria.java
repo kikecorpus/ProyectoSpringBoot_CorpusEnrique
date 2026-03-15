@@ -5,8 +5,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "Categoria")
-@Data
-@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+@Data@Auditable
+@EntityListeners(com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.AuditoriaListener.class)
 
 public class Categoria {
 

@@ -10,6 +10,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.CategoriaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     private final CategoriaMapper categoriaMapper;
     private final CategoriaRepository categoriaRepository;
 
+    @Transactional
     @Override
     public CategoriaResponse guardarCategoria(CategoriaRequest dto) {
         if (categoriaRepository.existsByNombre(dto.nombre())) {
@@ -45,6 +47,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         return categoriaMapper.entidadADto(c);
     }
 
+    @Transactional
     @Override
     public CategoriaResponse actualizarCategoria(Long id, CategoriaRequest dto) {
         Categoria c = categoriaRepository.findById(id)
@@ -57,6 +60,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         return categoriaMapper.entidadADto(c);
     }
 
+    @Transactional
     @Override
     public void eliminarCategoria(Long id) {
         if (!categoriaRepository.existsById(id)) {

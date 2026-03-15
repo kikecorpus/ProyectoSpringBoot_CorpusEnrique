@@ -3,6 +3,7 @@ package com.Campusland.ProyectoSpringBoot_CorpusEnrique.config;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -11,12 +12,15 @@ import java.util.Date;
 
 @Service
 public class JwtService {
-    private final String SECRET = "clave_super_secreta_para_clase_2026";
-    private final long EXPIRATION = 1000 * 60 * 30; // 30 minutos
-    private String r;
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @Value("${jwt.expiration}")
+    private long expiration;
+
 
     private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String generateToken(UserDetails user) {
@@ -28,7 +32,7 @@ public class JwtService {
                 .setIssuedAt(new Date())
 
                 // Fecha en que expira
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
 
                 // Firma con algoritmo HS256 usando mi clave secreta
                 .signWith(getKey(), SignatureAlgorithm.HS256)

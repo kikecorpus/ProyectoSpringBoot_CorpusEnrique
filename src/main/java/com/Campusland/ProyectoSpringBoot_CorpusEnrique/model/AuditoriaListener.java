@@ -1,4 +1,4 @@
-package com.inventario.audit;
+package com.Campusland.ProyectoSpringBoot_CorpusEnrique.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Auditoria;
@@ -30,25 +30,26 @@ public class AuditoriaListener {
         AuditoriaListener.objectMapper = mapper;
     }
 
-   
-    // Se ejecuta automaticamente despues de cada INSERT
+
     @PostPersist
     public void onPostPersist(Object entidad) {
-        registrar(entidad, Auditoria.TipoOperacion.INSERT, null, toMap(entidad));
+        if (entidad.getClass().isAnnotationPresent(Auditable.class)) {
+            registrar(entidad, Auditoria.TipoOperacion.INSERT, null, toMap(entidad));
+        }
     }
 
-   
-    // Se ejecuta automaticamente despues de cada UPDATE
     @PostUpdate
     public void onPostUpdate(Object entidad) {
-        registrar(entidad, Auditoria.TipoOperacion.UPDATE, null, toMap(entidad));
+        if (entidad.getClass().isAnnotationPresent(Auditable.class)) {
+            registrar(entidad, Auditoria.TipoOperacion.UPDATE, null, toMap(entidad));
+        }
     }
 
-   
-    // Se ejecuta automaticamente despues de cada DELETE
     @PostRemove
     public void onPostRemove(Object entidad) {
-        registrar(entidad, Auditoria.TipoOperacion.DELETE, toMap(entidad), null);
+        if (entidad.getClass().isAnnotationPresent(Auditable.class)) {
+            registrar(entidad, Auditoria.TipoOperacion.DELETE, toMap(entidad), null);
+        }
     }
 
    

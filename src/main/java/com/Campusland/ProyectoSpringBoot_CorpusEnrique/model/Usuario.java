@@ -12,7 +12,8 @@ import java.util.List;
 @Entity
 @Table(name = "Usuario")
 @Data
-@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+@Auditable
+@EntityListeners(com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.AuditoriaListener.class)
 
 public class Usuario  implements UserDetails {
 
@@ -35,7 +36,7 @@ public class Usuario  implements UserDetails {
     @JoinColumn(name = "persona_id", nullable = false)
     private Persona persona;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
 

@@ -12,6 +12,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.CiudadService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class CiudadServiceImpl implements CiudadService {
     private final CiudadMapper ciudadMapper;
     private final CiudadRepository ciudadRepository;
     private final DepartamentoRepository departamentoRepository;
-
+    @Transactional
     @Override
     public CiudadResponse guardarCiudad(CiudadRequest dto) {
         Departamento departamento = departamentoRepository.findById(dto.departamentoId())
@@ -49,7 +50,7 @@ public class CiudadServiceImpl implements CiudadService {
                 .orElseThrow(() -> new EntityNotFoundException("Ciudad no encontrada con id: " + id));
         return ciudadMapper.entidadADto(c);
     }
-
+    @Transactional
     @Override
     public CiudadResponse actualizarCiudad(Long id, CiudadRequest dto) {
         Ciudad c = ciudadRepository.findById(id)
@@ -64,7 +65,7 @@ public class CiudadServiceImpl implements CiudadService {
         ciudadRepository.save(c);
         return ciudadMapper.entidadADto(c);
     }
-
+    @Transactional
     @Override
     public void eliminarCiudad(Long id) {
         if (!ciudadRepository.existsById(id)) {

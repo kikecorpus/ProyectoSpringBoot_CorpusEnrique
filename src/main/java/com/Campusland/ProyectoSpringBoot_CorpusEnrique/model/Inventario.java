@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
     uniqueConstraints = @UniqueConstraint(columnNames = {"producto_id", "bodega_id"})
 )
 @Data
-@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+@Auditable
+@EntityListeners(com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.AuditoriaListener.class)
 
 public class Inventario {
 

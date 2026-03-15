@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
-@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+@Auditable
+@EntityListeners(com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.AuditoriaListener.class)
 
 public class MovimientoInventario {
 

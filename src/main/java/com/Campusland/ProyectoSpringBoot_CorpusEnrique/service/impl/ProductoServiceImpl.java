@@ -12,6 +12,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.ProductoService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class ProductoServiceImpl implements ProductoService {
     private final ProductoMapper productoMapper;
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
-
+    @Transactional
     @Override
     public ProductoResponse guardarProducto(ProductoRequest dto) {
         if (productoRepository.existsByCodigo(dto.codigo())) {
@@ -50,7 +51,7 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con id: " + id));
         return productoMapper.entidadADto(p);
     }
-
+    @Transactional
     @Override
     public ProductoResponse actualizarProducto(Long id, ProductoRequest dto) {
         Producto p = productoRepository.findById(id)
@@ -65,7 +66,7 @@ public class ProductoServiceImpl implements ProductoService {
         productoRepository.save(p);
         return productoMapper.entidadADto(p);
     }
-
+    @Transactional
     @Override
     public void eliminarProducto(Long id) {
         if (!productoRepository.existsById(id)) {

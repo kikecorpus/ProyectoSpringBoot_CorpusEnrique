@@ -3,8 +3,6 @@ package com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.impl;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.AuditoriaResponse;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.mappers.AuditoriaMapper;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Auditoria;
-import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Auditoria.TipoOperacion;
-import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Usuario;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.AuditoriaRepository;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.UsuarioRepository;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.AuditoriaService;
@@ -55,27 +53,5 @@ public class AuditoriaServiceImpl implements AuditoriaService {
                 .stream()
                 .map(auditoriaMapper::entidadADto)
                 .toList();
-    }
-
-    @Override
-    public void registrarAuditoria(Long usuarioId,
-                                   String entidadAfectada,
-                                   Long registroId,
-                                   TipoOperacion tipoOperacion,
-                                   Map<String, Object> valoresAnteriores,
-                                   Map<String, Object> valoresNuevos) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + usuarioId));
-
-        Auditoria auditoria = Auditoria.builder()
-                .usuario(usuario)
-                .entidadAfectada(entidadAfectada)
-                .registroId(registroId)
-                .tipoOperacion(tipoOperacion)
-                .valoresAnteriores(valoresAnteriores)
-                .valoresNuevos(valoresNuevos)
-                .build();
-
-        auditoriaRepository.save(auditoria);
     }
 }

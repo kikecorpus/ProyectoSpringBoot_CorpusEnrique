@@ -6,7 +6,8 @@ import lombok.*;
 @Entity
 @Table(name = "Rol")
 @Data
-@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+@Auditable
+@EntityListeners(com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.AuditoriaListener.class)
 
 public class Rol {
 

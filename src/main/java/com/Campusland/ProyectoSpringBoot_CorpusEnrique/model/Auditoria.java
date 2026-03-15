@@ -12,6 +12,7 @@ import java.util.Map;
 @Getter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
+@org.hibernate.annotations.Immutable
 public class Auditoria {
 
     @Id

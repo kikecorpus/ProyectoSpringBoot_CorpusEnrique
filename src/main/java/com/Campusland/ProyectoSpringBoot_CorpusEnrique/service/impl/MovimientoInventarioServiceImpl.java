@@ -29,9 +29,9 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
 
     @Override
     @Transactional
-    public MovimientoInventarioResponse registrarMovimiento(MovimientoInventarioRequest dto, Long usuarioId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + usuarioId));
+    public MovimientoInventarioResponse registrarMovimiento(MovimientoInventarioRequest dto, String username) {
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + username));
 
         MovimientoInventario movimiento = switch (dto.tipoMovimiento()) {
             case ENTRADA  -> registrarEntrada(dto, usuario);
@@ -45,7 +45,7 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
     }
 
     // Operaciones privadas por tipo
-
+    @Transactional
     private MovimientoInventario registrarEntrada(MovimientoInventarioRequest dto, Usuario usuario) {
         if (dto.inventarioDestinoId() == null) {
             throw new BusinessRuleException("Una ENTRADA requiere un inventario destino");
@@ -72,7 +72,7 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
                 .observacion(dto.observacion())
                 .build();
     }
-
+    @Transactional
     private MovimientoInventario registrarSalida(MovimientoInventarioRequest dto, Usuario usuario) {
         if (dto.inventarioOrigenId() == null) {
             throw new BusinessRuleException("Una SALIDA requiere un inventario origen");
@@ -99,7 +99,7 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
                 .observacion(dto.observacion())
                 .build();
     }
-
+    @Transactional
     private MovimientoInventario registrarTraslado(MovimientoInventarioRequest dto, Usuario usuario) {
         if (dto.inventarioOrigenId() == null || dto.inventarioDestinoId() == null) {
             throw new BusinessRuleException("Un TRASLADO requiere inventario origen y destino");
@@ -137,7 +137,7 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
                 .observacion(dto.observacion())
                 .build();
     }
-
+    @Transactional
     private MovimientoInventario registrarAjuste(MovimientoInventarioRequest dto, Usuario usuario) {
         if (dto.inventarioOrigenId() == null) {
             throw new BusinessRuleException("Un AJUSTE requiere un inventario origen");

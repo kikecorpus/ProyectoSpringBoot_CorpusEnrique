@@ -10,6 +10,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.DepartamentoServi
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class DepartamentoServiceImpl implements DepartamentoService {
 
     private final DepartamentoMapper departamentoMapper;
     private final DepartamentoRepository departamentoRepository;
-
+    @Transactional
     @Override
     public DepartamentoResponse guardarDepartamento(DepartamentoRequest dto) {
         if (departamentoRepository.existsByNombre(dto.nombre())) {
@@ -44,7 +45,7 @@ public class DepartamentoServiceImpl implements DepartamentoService {
                 .orElseThrow(() -> new EntityNotFoundException("Departamento no encontrado con id: " + id));
         return departamentoMapper.entidadADto(d);
     }
-
+    @Transactional
     @Override
     public DepartamentoResponse actualizarDepartamento(Long id, DepartamentoRequest dto) {
         Departamento d = departamentoRepository.findById(id)
@@ -56,7 +57,7 @@ public class DepartamentoServiceImpl implements DepartamentoService {
         departamentoRepository.save(d);
         return departamentoMapper.entidadADto(d);
     }
-
+    @Transactional
     @Override
     public void eliminarDepartamento(Long id) {
         if (!departamentoRepository.existsById(id)) {
