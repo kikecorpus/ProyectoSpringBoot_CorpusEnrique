@@ -7,6 +7,7 @@ const API_BASE = 'http://localhost:8080';
 /* ── Auth helpers ── */
 function getToken() { return localStorage.getItem('token'); }
 function getUsername() { return localStorage.getItem('username') || 'Usuario'; }
+function getUserRole() { return localStorage.getItem('userRole') || 'OPERARIO'; }
 function requireAuth() {
   if (!getToken()) { window.location.href = 'index.html'; return false; }
   return true;
@@ -106,6 +107,11 @@ function confirmAction(msg) {
 
 /* ── Sidebar HTML generator ── */
 function getSidebarHTML() {
+  const role = getUserRole();
+  const isAdmin = role === 'ADMIN';
+  const isSupervisor = role === 'SUPERVISOR' || isAdmin;
+  const isOperario = role === 'OPERARIO';
+
   return `
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -123,9 +129,9 @@ function getSidebarHTML() {
       <a class="nav-item" href="movimientos.html">
         <span class="icon">🔄</span> Movimientos
       </a>
-      <a class="nav-item" href="reportes.html">
+      ${isSupervisor ? `<a class="nav-item" href="reportes.html">
         <span class="icon">📈</span> Reportes
-      </a>
+      </a>` : ''}
 
       <div class="nav-section">Administración</div>
       <a class="nav-item" href="productos.html">
@@ -134,22 +140,22 @@ function getSidebarHTML() {
       <a class="nav-item" href="bodegas.html">
         <span class="icon">🏭</span> Bodegas
       </a>
-      <a class="nav-item" href="usuarios.html">
+      ${isAdmin ? `<a class="nav-item" href="usuarios.html">
         <span class="icon">👥</span> Usuarios
       </a>
       <a class="nav-item" href="roles.html">
         <span class="icon">🔑</span> Roles
-      </a>
-      <a class="nav-item" href="auditoria.html">
+      </a>` : ''}
+      ${isSupervisor ? `<a class="nav-item" href="auditoria.html">
         <span class="icon">🛡️</span> Auditoría
-      </a>
+      </a>` : ''}
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
         <div class="user-avatar" id="sidebarAvatar">U</div>
         <div>
           <div class="user-name" id="sidebarUsername">Usuario</div>
-          <div class="user-role">Sesión activa</div>
+          <div class="user-role">${role}</div>
         </div>
       </div>
       <button class="btn-logout" onclick="logout()">⬅ Cerrar sesión</button>

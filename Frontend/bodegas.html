@@ -14,7 +14,7 @@
     <div class="topbar">
       <span class="page-title">Bodegas</span>
       <div class="topbar-right">
-        <button class="btn btn-primary btn-sm" onclick="openModal('modalBod');resetForm()">+ Nueva Bodega</button>
+        <button class="btn btn-primary btn-sm" id="btnNuevaBodega" onclick="openModal('modalBod');resetForm()">+ Nueva Bodega</button>
       </div>
     </div>
     <div class="page-body">
@@ -92,6 +92,15 @@
   requireAuth();
   document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
   initSidebar();
+
+  const role = getUserRole();
+  const canEditBodegas = role === 'ADMIN';
+
+  // Ocultar botón nuevo si no puede editar
+  if (!canEditBodegas) {
+    document.getElementById('btnNuevaBodega').style.display = 'none';
+  }
+
   let allData = [], editId = null;
 
   async function load() {
@@ -118,8 +127,8 @@
         <td><span class="badge badge-${b.estado==='ACTIVO'?'success':'neutral'}">${b.estado}</span></td>
         <td style="font-size:12px">${b.encargado?.username||'—'}</td>
         <td><div class="flex gap-2">
-          <button class="btn btn-outline btn-sm" onclick="editar(${b.idBodega})">✏️</button>
-          <button class="btn btn-danger btn-sm"  onclick="eliminar(${b.idBodega})">🗑</button>
+          ${canEditBodegas ? `<button class="btn btn-outline btn-sm" onclick="editar(${b.idBodega})">✏️</button>
+          <button class="btn btn-danger btn-sm"  onclick="eliminar(${b.idBodega})">🗑</button>` : ''}
         </div></td>
       </tr>`).join('');
   }

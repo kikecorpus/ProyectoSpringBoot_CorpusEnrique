@@ -14,7 +14,7 @@
     <div class="topbar">
       <span class="page-title">Gestión de Inventario</span>
       <div class="topbar-right">
-        <button class="btn btn-primary btn-sm" onclick="openModal('modalInventario');resetForm()">+ Nuevo Inventario</button>
+        <button class="btn btn-primary btn-sm" id="btnNuevoInventario" onclick="openModal('modalInventario');resetForm()">+ Nuevo Inventario</button>
       </div>
     </div>
     <div class="page-body">
@@ -109,6 +109,14 @@
   document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
   initSidebar();
 
+  const role = getUserRole();
+  const canEditInventario = role !== 'OPERARIO';
+
+  // Ocultar botón nuevo si no puede editar
+  if (!canEditInventario) {
+    document.getElementById('btnNuevoInventario').style.display = 'none';
+  }
+
   let allData = [], editId = null;
 
   async function loadInventarios() {
@@ -148,10 +156,10 @@
           : '<span class="badge badge-success">✓ OK</span>'}</td>
         <td style="color:var(--slate);font-size:12px">${fmtDate(i.ultimaActualizacion)}</td>
         <td>
-          <div class="flex gap-2">
+          ${canEditInventario ? `<div class="flex gap-2">
             <button class="btn btn-outline btn-sm" onclick="editar(${i.idInventario})">✏️</button>
             <button class="btn btn-danger btn-sm" onclick="eliminar(${i.idInventario})">🗑</button>
-          </div>
+          </div>` : ''}
         </td>
       </tr>`).join('');
   }

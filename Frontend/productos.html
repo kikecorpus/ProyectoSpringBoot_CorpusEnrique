@@ -14,7 +14,7 @@
     <div class="topbar">
       <span class="page-title">Productos</span>
       <div class="topbar-right">
-        <button class="btn btn-primary btn-sm" onclick="openModal('modalProd');resetForm()">+ Nuevo Producto</button>
+        <button class="btn btn-primary btn-sm" id="btnNuevoProducto" onclick="openModal('modalProd');resetForm()">+ Nuevo Producto</button>
       </div>
     </div>
     <div class="page-body">
@@ -83,6 +83,14 @@
   document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
   initSidebar();
 
+  const role = getUserRole();
+  const canEditProductos = role === 'ADMIN';
+
+  // Ocultar botón nuevo si no puede editar
+  if (!canEditProductos) {
+    document.getElementById('btnNuevoProducto').style.display = 'none';
+  }
+
   let allData = [], editId = null;
 
   async function load() {
@@ -111,8 +119,8 @@
         <td style="color:var(--slate)">${p.unidadMedida}</td>
         <td>${p.categoria?.nombre || '—'}</td>
         <td><div class="flex gap-2">
-          <button class="btn btn-outline btn-sm" onclick="editar(${p.idProducto})">✏️</button>
-          <button class="btn btn-danger btn-sm"  onclick="eliminar(${p.idProducto})">🗑</button>
+          ${canEditProductos ? `<button class="btn btn-outline btn-sm" onclick="editar(${p.idProducto})">✏️</button>
+          <button class="btn btn-danger btn-sm"  onclick="eliminar(${p.idProducto})">🗑</button>` : ''}
         </div></td>
       </tr>`).join('');
   }

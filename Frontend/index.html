@@ -293,6 +293,7 @@
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           localStorage.setItem('userSub', payload.sub || username);
+          localStorage.setItem('userRole', (payload.rol || '').replace('ROLE_', ''));
         } catch {}
 
         window.location.href = 'dashboard.html';

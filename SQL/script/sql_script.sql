@@ -7,7 +7,6 @@ CREATE DATABASE IF NOT EXISTS LogiTrack;
 USE LogiTrack;
 
 
-
 -- ------------------------------------------------------------
 -- Creacion base de entidades
 -- ------------------------------------------------------------
@@ -31,16 +30,6 @@ CREATE TABLE Departamento (
 );
 
 
-CREATE TABLE Usuario (
-    id_usuario  INT AUTO_INCREMENT PRIMARY KEY,
-    username    VARCHAR(50) NOT NULL UNIQUE,
-    contrasena  VARCHAR(255) NOT NULL,
-    estado      ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
-    persona_id  INT NOT NULL,
-    rol_id      INT NOT NULL,
-    CONSTRAINT fk_usuario_persona FOREIGN KEY (persona_id) REFERENCES Persona(id_persona),
-    CONSTRAINT fk_usuario_rol     FOREIGN KEY (rol_id)     REFERENCES Rol(id_rol)
-);
 
 CREATE TABLE Ciudad (
     id_ciudad       INT AUTO_INCREMENT PRIMARY KEY,
@@ -66,6 +55,22 @@ CREATE TABLE Bodega (
     encargado_id INT NOT NULL,
     CONSTRAINT fk_bodega_ciudad    FOREIGN KEY (ciudad_id)    REFERENCES Ciudad(id_ciudad),
     CONSTRAINT fk_bodega_encargado FOREIGN KEY (encargado_id) REFERENCES Usuario(id_usuario)
+);
+
+
+
+CREATE TABLE Usuario (
+    id_usuario  INT AUTO_INCREMENT PRIMARY KEY,
+    username    VARCHAR(50) NOT NULL UNIQUE,
+    contrasena  VARCHAR(255) NOT NULL,
+    estado      ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
+    persona_id  INT NOT NULL,
+    rol_id      INT NOT NULL,
+    bodega_id 	INT,
+    CONSTRAINT fk_usuario_persona FOREIGN KEY (persona_id) REFERENCES Persona(id_persona),
+    CONSTRAINT fk_usuario_rol     FOREIGN KEY (rol_id)     REFERENCES Rol(id_rol),
+    CONSTRAINT fk_usuario_bodega  FOREIGN KEY (bodegal_id) REFERENCES Bodega(id_bodega)
+
 );
 
 CREATE TABLE Producto (
@@ -172,32 +177,28 @@ INSERT INTO Rol (nombre, descripcion) VALUES
 ('ADMIN',    'Administrador del sistema con acceso total'),
 ('OPERARIO', 'Usuario operativo que gestiona movimientos de inventario'),
 ('SUPERVISOR', 'Administra bodegas y supervisa operarios'); 
-;
+
 
 
 
 INSERT INTO Persona (nombre, apellido, tipo_documento, numero_documento) VALUES
-('Carlos',    'Ramirez',  'CC', '1001234567'),
+('David',    'Dominguez',  'CC', '1001234567'),
 ('Maria',     'Lopez',    'CC', '1009876543'),
 ('Andres',    'Torres',   'CC', '1005551234'),
 ('Lucia',     'Gomez',    'CC', '1003334444'),
 ('Felipe',    'Herrera',  'CC', '1007778888'),
 ('Valentina', 'Castillo', 'CC', '1002221111'),
 ('kike',      'corpus',   'CC', '1008889999');
-;
 
 
-
-
-INSERT INTO Usuario (username, contrasena, estado, persona_id, rol_id) VALUES
-('carlos.admin',    '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa',    'ACTIVO',   1, 1),
-('maria.admin',     '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa',    'ACTIVO',   2, 1),
-('andres.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   3, 2),
-('lucia.operario',  '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   4, 2),
-('felipe.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   5, 2),
-('vale.operario',   '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'INACTIVO', 6, 2),
-('kike.supervisor', '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa', 'ACTIVO', 7, 3);
-;
+INSERT INTO Usuario (username, contrasena, estado, persona_id, rol_id, bodega_id) VALUES
+('david.admin',    '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa',    'ACTIVO',   1, 1, null),
+('andres.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   3, 2,1),
+('lucia.operario',  '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   4, 2,2),
+('felipe.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   5, 2,3),
+('vale.operario',   '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'INACTIVO', 6, 2,4),
+('kike.supervisor', '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa', 'ACTIVO', 2, 3),
+('maria.supervisor','$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa', 'ACTIVO', 7, 3);
 
 
 INSERT INTO Departamento (nombre) VALUES
@@ -230,11 +231,11 @@ INSERT INTO Categoria (nombre) VALUES
 
 
 INSERT INTO Bodega (nombre, direccion, capacidad, estado, ciudad_id, encargado_id) VALUES
-('Bodega Central Medellin',    'Calle 50 # 40-20',    1000, 'ACTIVO',   1, 1),
-('Bodega Norte Bello',         'Cra 32 # 15-10',       500, 'ACTIVO',   2, 2),
-('Bodega Bogota Centro',       'Av. Caracas # 20-15',  800, 'ACTIVO',   4, 1),
+('Bodega Central Medellin',    'Calle 50 # 40-20',    1000, 'ACTIVO',   1, 7),
+('Bodega Norte Bello',         'Cra 32 # 15-10',       500, 'ACTIVO',   2, 7),
+('Bodega Bogota Centro',       'Av. Caracas # 20-15',  800, 'ACTIVO',   4, 2),
 ('Bodega Cali Sur',            'Calle 15 # 25-30',     600, 'ACTIVO',   6, 2),
-('Bodega Barranquilla Puerto', 'Via 40 # 36-135',      750, 'INACTIVO', 8, 1);
+('Bodega Barranquilla Puerto', 'Via 40 # 36-135',      750, 'INACTIVO', 8, 7);
 
 
 INSERT INTO Producto (nombre, codigo, unidad_medida, categoria_id) VALUES
