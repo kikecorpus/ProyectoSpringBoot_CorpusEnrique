@@ -6,12 +6,14 @@ import lombok.*;
 @Entity
 @Table(name = "Rol")
 @Data
+@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+
 public class Rol {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_rol")
-    private Integer idRol;
+    private Long idRol;
 
     @Column(name = "nombre", nullable = false, unique = true, length = 50)
     private String nombre;

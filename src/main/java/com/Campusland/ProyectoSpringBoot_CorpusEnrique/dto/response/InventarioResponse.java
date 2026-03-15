@@ -5,7 +5,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Inventario.Estado;
 
 import java.time.LocalDateTime;
 
-public record InventarioResponse(     Integer idInventario,
+public record InventarioResponse(     Long idInventario,
                                       ProductoResponse producto,
                                       BodegaResponse bodega,
                                       Integer cantidadActual,

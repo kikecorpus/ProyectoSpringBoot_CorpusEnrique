@@ -17,7 +17,7 @@ public class Auditoria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_auditoria")
-    private Integer idAuditoria;
+    private Long idAuditoria;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
@@ -27,7 +27,7 @@ public class Auditoria {
     private String entidadAfectada;
 
     @Column(name = "registro_id", nullable = false)
-    private Integer registroId;
+    private Long registroId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_operacion", nullable = false)

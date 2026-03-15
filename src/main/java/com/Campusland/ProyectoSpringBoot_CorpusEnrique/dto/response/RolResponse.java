@@ -1,7 +1,7 @@
 package com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response;
 
 public record RolResponse(
-    Integer idRol,
+    Long idRol,
     String nombre,
     String descripcion
 ) {}

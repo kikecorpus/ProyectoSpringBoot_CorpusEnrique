@@ -6,6 +6,8 @@ import lombok.*;
 @Entity
 @Table(name = "Departamento")
 @Data
+@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+
 public class Departamento {
 
     @Id

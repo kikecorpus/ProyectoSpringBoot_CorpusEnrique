@@ -10,12 +10,14 @@ import java.time.LocalDateTime;
     uniqueConstraints = @UniqueConstraint(columnNames = {"producto_id", "bodega_id"})
 )
 @Data
+@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+
 public class Inventario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_inventario")
-    private Integer idInventario;
+    private Long idInventario;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)

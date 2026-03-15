@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LogiTrack — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-hex"></div>
+      <span>LogiTrack</span>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Principal</div>
+      <div class="nav-item active" data-module="dashboard" onclick="navigate('dashboard')">
+        <span class="icon">⊞</span> Dashboard
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Geografía</div>
+      <div class="nav-item" data-module="departamento" onclick="navigate('departamento')">
+        <span class="icon">🗺</span> Departamentos
+      </div>
+      <div class="nav-item" data-module="ciudad" onclick="navigate('ciudad')">
+        <span class="icon">🏙</span> Ciudades
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Organización</div>
+      <div class="nav-item" data-module="rol" onclick="navigate('rol')">
+        <span class="icon">🔑</span> Roles
+      </div>
+      <div class="nav-item" data-module="persona" onclick="navigate('persona')">
+        <span class="icon">👤</span> Personas
+      </div>
+      <div class="nav-item" data-module="usuario" onclick="navigate('usuario')">
+        <span class="icon">👥</span> Usuarios
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Inventario</div>
+      <div class="nav-item" data-module="categoria" onclick="navigate('categoria')">
+        <span class="icon">🏷</span> Categorías
+      </div>
+      <div class="nav-item" data-module="producto" onclick="navigate('producto')">
+        <span class="icon">📦</span> Productos
+      </div>
+      <div class="nav-item" data-module="bodega" onclick="navigate('bodega')">
+        <span class="icon">🏭</span> Bodegas
+      </div>
+      <div class="nav-item" data-module="inventario" onclick="navigate('inventario')">
+        <span class="icon">📋</span> Inventario
+      </div>
+      <div class="nav-item" data-module="movimiento" onclick="navigate('movimiento')">
+        <span class="icon">🔄</span> Movimientos
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Sistema</div>
+      <div class="nav-item" data-module="auditoria" onclick="navigate('auditoria')">
+        <span class="icon">🔍</span> Auditoría
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div class="user-info">
+          <div class="user-name" id="currentUser">usuario</div>
+          <div class="user-role">Operador</div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Cerrar sesión">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <header class="topbar">
+      <div class="page-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-actions">
+        <span style="font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace" id="dateLabel"></span>
+      </div>
+    </header>
+
+    <div class="content" id="content">
+      <!-- Cargado por JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Modal ── -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Modal</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toasts ── -->
+<div id="toastContainer"></div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Cerrar modal al hacer click en overlay
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modal')) closeModal();
+  }
+
+  // Fecha en topbar
+  document.getElementById('dateLabel').textContent =
+    new Date().toLocaleDateString('es-CO', { weekday:'short', day:'numeric', month:'short' });
+</script>
+
+</body>
+</html>

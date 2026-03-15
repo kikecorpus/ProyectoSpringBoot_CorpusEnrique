@@ -4,7 +4,7 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.MovimientoInventari
 import java.time.LocalDateTime;
 
 public record MovimientoInventarioResponse(
-    Integer idMovimiento,
+    Long idMovimiento,
     InventarioResumenResponse inventarioOrigen,   // null si es ENTRADA
     InventarioResumenResponse inventarioDestino,  // null si es SALIDA o AJUSTE
     UsuarioResponse usuario,

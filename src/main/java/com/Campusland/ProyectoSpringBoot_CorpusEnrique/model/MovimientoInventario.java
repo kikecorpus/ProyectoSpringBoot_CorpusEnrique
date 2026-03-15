@@ -9,12 +9,14 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
+@EntityListeners(com.inventario.audit.AuditoriaListener.class)
+
 public class MovimientoInventario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_movimiento")
-    private Integer idMovimiento;
+    private Long idMovimiento;
 
     // Nullable: ENTRADA no tiene origen
     @ManyToOne(fetch = FetchType.LAZY)
@@ -56,9 +58,6 @@ public class MovimientoInventario {
     public void prePersist() {
         this.fecha = LocalDateTime.now();
     }
-
-    // Entidad inmutable: sin setters publicos
-    // La validacion de origen/destino se hace en MovimientoService
 
     public enum TipoMovimiento {
         ENTRADA, SALIDA, TRASLADO, AJUSTE

@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 public class InventarioResumenResponse {
 
-    private Integer idInventario;
+    private Long idInventario;
     private String nombreProducto;
     private String codigoProducto;
     private String nombreBodega;
