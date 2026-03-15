@@ -92,4 +92,12 @@ public class InventarioServiceImpl implements InventarioService {
                 .map(inventarioMapper::entidadADto)
                 .toList();
     }
+
+    @Override
+    public List<InventarioResponse> listarInventariosConStockBajo() {
+        return inventarioRepository.findInventariosConStockBajo()
+                .stream()
+                .map(inventarioMapper::entidadADto)
+                .toList();
+    }
 }

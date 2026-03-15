@@ -89,4 +89,14 @@ public class InventarioController {
     public ResponseEntity<List<InventarioResponse>> listarStockCritico() {
         return ResponseEntity.ok(inventarioService.listarInventariosConStockCritico());
     }
+    @Operation(summary = "Listar inventarios con stock bajo",
+            description = "Retorna inventarios con cantidad actual menor a 10 unidades")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @GetMapping("/stock-bajo")
+    public ResponseEntity<List<InventarioResponse>> listarStockBajo() {
+        return ResponseEntity.ok(inventarioService.listarInventariosConStockBajo());
+    }
 }

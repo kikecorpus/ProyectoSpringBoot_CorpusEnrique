@@ -9,4 +9,5 @@ import java.util.List;
 public interface AuditoriaRepository extends JpaRepository<Auditoria, Long> {
     List<Auditoria> findByEntidadAfectada(String entidadAfectada);
     List<Auditoria> findByUsuarioIdUsuario(Long usuarioId);
+    List<Auditoria> findByTipoOperacion(Auditoria.TipoOperacion tipoOperacion);
 }

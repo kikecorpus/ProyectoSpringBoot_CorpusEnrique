@@ -185,12 +185,12 @@ INSERT INTO Persona (nombre, apellido, tipo_documento, numero_documento) VALUES
 
 
 INSERT INTO Usuario (username, contrasena, estado, persona_id, rol_id) VALUES
-('carlos.admin',    'admin123',    'ACTIVO',   1, 1),
-('maria.admin',     'admin123',    'ACTIVO',   2, 1),
-('andres.operario', 'operario123', 'ACTIVO',   3, 2),
-('lucia.operario',  'operario123', 'ACTIVO',   4, 2),
-('felipe.operario', 'operario123', 'ACTIVO',   5, 2),
-('vale.operario',   'operario123', 'INACTIVO', 6, 2);
+('carlos.admin',    '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa',    'ACTIVO',   1, 1),
+('maria.admin',     '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa',    'ACTIVO',   2, 1),
+('andres.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   3, 2),
+('lucia.operario',  '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   4, 2),
+('felipe.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   5, 2),
+('vale.operario',   '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'INACTIVO', 6, 2);
 
 
 
@@ -293,5 +293,3 @@ INSERT INTO MovimientoInventario (inventario_origen_id, inventario_destino_id, u
 (6,   NULL, 4, 'AJUSTE', 5,  90,  85,  'AJU-2024-002', 'Ajuste por conteo fisico aceite',      '2024-03-05 15:00:00'),
 (11,  NULL, 5, 'AJUSTE', 10, 300, 290, 'AJU-2024-003', 'Ajuste por conteo fisico lapiceros',   '2024-03-10 10:00:00');
 
-
-select * from Auditoria;

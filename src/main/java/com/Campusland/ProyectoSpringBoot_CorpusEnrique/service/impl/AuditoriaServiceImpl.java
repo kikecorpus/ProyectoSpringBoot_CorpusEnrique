@@ -54,4 +54,11 @@ public class AuditoriaServiceImpl implements AuditoriaService {
                 .map(auditoriaMapper::entidadADto)
                 .toList();
     }
+    @Override
+    public List<AuditoriaResponse> listarPorTipoOperacion(Auditoria.TipoOperacion tipoOperacion) {
+        return auditoriaRepository.findByTipoOperacion(tipoOperacion)
+                .stream()
+                .map(auditoriaMapper::entidadADto)
+                .toList();
+    }
 }

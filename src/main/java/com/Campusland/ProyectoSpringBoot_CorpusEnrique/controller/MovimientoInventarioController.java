@@ -9,12 +9,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 @Tag(name = "MovimientoInventario", description = "Operaciones relacionadas con el Movimiento de Inventario")
 @RestController
@@ -69,5 +72,20 @@ public class MovimientoInventarioController {
     public ResponseEntity<List<MovimientoInventarioResponse>> listarPorInventario(
             @PathVariable Long inventarioId) {
         return ResponseEntity.ok(movimientoService.listarMovimientosPorInventario(inventarioId));
+    }
+    @Operation(summary = "Listar movimientos por rango de fechas",
+            description = "Retorna movimientos registrados entre dos fechas")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Rango de fechas inválido"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @GetMapping("/rango")
+    public ResponseEntity<List<MovimientoInventarioResponse>> listarPorRangoFechas(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        LocalDateTime desdeDateTime = desde.atStartOfDay();
+        LocalDateTime hastaDateTime = hasta.atTime(23, 59, 59);
+        return ResponseEntity.ok(movimientoService.listarMovimientosPorRangoFechas(desdeDateTime, hastaDateTime));
     }
 }

@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -198,5 +199,17 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
     private Inventario obtenerInventario(Long id) {
         return inventarioRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Inventario no encontrado con id: " + id));
+    }
+
+    @Override
+    public List<MovimientoInventarioResponse> listarMovimientosPorRangoFechas(
+            LocalDateTime desde, LocalDateTime hasta) {
+        if (desde.isAfter(hasta)) {
+            throw new BusinessRuleException("La fecha inicio no puede ser mayor a la fecha fin");
+        }
+        return movimientoRepository.findByFechaBetween(desde, hasta)
+                .stream()
+                .map(movimientoMapper::entidadADto)
+                .toList();
     }
 }

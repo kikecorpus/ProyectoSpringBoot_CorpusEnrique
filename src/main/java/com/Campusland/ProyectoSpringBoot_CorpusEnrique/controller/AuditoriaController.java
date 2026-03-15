@@ -1,6 +1,7 @@
 package com.Campusland.ProyectoSpringBoot_CorpusEnrique.controller;
 
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.AuditoriaResponse;
+import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Auditoria;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.AuditoriaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -61,5 +62,17 @@ public class AuditoriaController {
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<List<AuditoriaResponse>> listarPorUsuario(@PathVariable Long usuarioId) {
         return ResponseEntity.ok(auditoriaService.listarPorUsuario(usuarioId));
+    }
+    @Operation(summary = "Filtrar auditoria por tipo de operacion",
+            description = "Retorna registros de auditoria filtrados por tipo: INSERT, UPDATE o DELETE")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Tipo de operacion invalido"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @GetMapping("/tipo/{tipoOperacion}")
+    public ResponseEntity<List<AuditoriaResponse>> listarPorTipoOperacion(
+            @PathVariable Auditoria.TipoOperacion tipoOperacion) {
+        return ResponseEntity.ok(auditoriaService.listarPorTipoOperacion(tipoOperacion));
     }
 }

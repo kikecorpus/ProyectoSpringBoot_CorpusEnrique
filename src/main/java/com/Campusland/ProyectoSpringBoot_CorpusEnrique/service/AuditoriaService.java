@@ -1,6 +1,7 @@
 package com.Campusland.ProyectoSpringBoot_CorpusEnrique.service;
 
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.AuditoriaResponse;
+import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Auditoria;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Auditoria.TipoOperacion;
 import java.util.List;
 import java.util.Map;
@@ -10,5 +11,6 @@ public interface AuditoriaService {
     AuditoriaResponse obtenerAuditoriaPorId(Long id);
     List<AuditoriaResponse> listarPorEntidad(String entidadAfectada);
     List<AuditoriaResponse> listarPorUsuario(Long usuarioId);
+    List<AuditoriaResponse> listarPorTipoOperacion(Auditoria.TipoOperacion tipoOperacion);
 
 }
