@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Usuarios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarMount"></div>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Usuarios</span>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalUsr');resetForm()">+ Nuevo Usuario</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input class="search-input" id="searchInput" placeholder="Buscar username o persona..." oninput="filterTable()">
+          </div>
+          <select class="form-control" id="filterEst" onchange="filterTable()" style="width:150px">
+            <option value="">Todos</option><option>ACTIVO</option><option>INACTIVO</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="load()">🔄</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Usuario</th><th>Persona</th><th>Rol</th><th>Estado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tableBody">
+              <tr><td colspan="5"><div class="loader-wrap"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalUsr">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Nuevo Usuario</span>
+      <button class="modal-close" onclick="closeModal('modalUsr')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-control" id="fUsername" placeholder="jperez">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contraseña <span id="passHint" style="color:var(--slate);font-size:10px">(requerida)</span></label>
+          <input type="password" class="form-control" id="fPass" placeholder="Mín. 8 caracteres">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-control" id="fEstado"><option>ACTIVO</option><option>INACTIVO</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rol</label>
+          <select class="form-control" id="fRol"></select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Persona asociada</label>
+          <select class="form-control" id="fPersona"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalUsr')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+  let allData = [], editId = null;
+
+  async function load() {
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td colspan="5"><div class="loader-wrap"><div class="spinner"></div></div></td></tr>';
+    try { allData = await API.get('/api/usuario'); renderTable(allData); }
+    catch(e) { toast(e.message,'danger'); }
+  }
+
+  function renderTable(data) {
+    if (!data.length) {
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👥</div>Sin usuarios</div></td></tr>';
+      return;
+    }
+    document.getElementById('tableBody').innerHTML = data.map(u => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--navy);flex-shrink:0">${u.username.charAt(0).toUpperCase()}</div>
+            <strong>${u.username}</strong>
+          </div>
+        </td>
+        <td>${u.persona ? u.persona.nombre+' '+u.persona.apellido : '—'}</td>
+        <td><span class="badge badge-info">${u.rol?.nombre||'—'}</span></td>
+        <td><span class="badge badge-${u.estado==='ACTIVO'?'success':'neutral'}">${u.estado}</span></td>
+        <td><div class="flex gap-2">
+          <button class="btn btn-outline btn-sm" onclick="editar(${u.idUsuario})">✏️</button>
+          <button class="btn btn-danger btn-sm"  onclick="eliminar(${u.idUsuario})">🗑</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const e = document.getElementById('filterEst').value;
+    renderTable(allData.filter(u =>
+      (!q || (u.username+(u.persona?.nombre||'')+(u.persona?.apellido||'')).toLowerCase().includes(q)) &&
+      (!e || u.estado===e)));
+  }
+
+  async function loadSelects() {
+    const [roles, personas] = await Promise.all([API.get('/api/rol'), API.get('/api/persona')]);
+    document.getElementById('fRol').innerHTML = roles.map(r => `<option value="${r.idRol}">${r.nombre}</option>`).join('');
+    document.getElementById('fPersona').innerHTML = personas.map(p => `<option value="${p.idPersona}">${p.nombre} ${p.apellido} (${p.numeroDocumento})</option>`).join('');
+  }
+
+  function resetForm() {
+    editId=null;
+    document.getElementById('modalTitle').textContent='Nuevo Usuario';
+    document.getElementById('passHint').textContent='(requerida)';
+    ['fUsername','fPass'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fEstado').value='ACTIVO';
+    loadSelects();
+  }
+
+  async function editar(id) {
+    const u = allData.find(x=>x.idUsuario===id); if(!u) return;
+    editId=id; document.getElementById('modalTitle').textContent='Editar Usuario';
+    document.getElementById('passHint').textContent='(dejar en blanco para mantener)';
+    await loadSelects();
+    document.getElementById('fUsername').value = u.username;
+    document.getElementById('fEstado').value   = u.estado;
+    document.getElementById('fRol').value      = u.rol?.idRol;
+    document.getElementById('fPersona').value  = u.persona?.idPersona;
+    document.getElementById('fPass').value     = '';
+    openModal('modalUsr');
+  }
+
+  async function guardar() {
+    const pass = document.getElementById('fPass').value;
+    if (!editId && pass.length < 8) { toast('La contraseña debe tener mínimo 8 caracteres','warning'); return; }
+    if (editId && pass && pass.length < 8) { toast('La contraseña debe tener mínimo 8 caracteres','warning'); return; }
+    const body = {
+      username:   document.getElementById('fUsername').value.trim(),
+      contrasena: pass || 'placeholder_no_change_123',
+      estado:     document.getElementById('fEstado').value,
+      rolId:      Number(document.getElementById('fRol').value),
+      personaId:  Number(document.getElementById('fPersona').value)
+    };
+    if (!body.username) { toast('El username es requerido','warning'); return; }
+    try {
+      editId ? await API.put(`/api/usuario/${editId}`,body) : await API.post('/api/usuario',body);
+      toast(`Usuario ${editId?'actualizado':'creado'}`,'success');
+      closeModal('modalUsr'); load();
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  async function eliminar(id) {
+    if (!confirmAction('¿Eliminar este usuario?')) return;
+    try { await API.delete(`/api/usuario/${id}`); toast('Eliminado','success'); load(); }
+    catch(e) { toast(e.message,'danger'); }
+  }
+
+  load();
+</script>
+</body>
+</html>

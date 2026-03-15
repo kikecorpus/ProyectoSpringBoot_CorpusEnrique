@@ -1,138 +1,174 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LogiTrack — Dashboard</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
 </head>
 <body>
-
 <div class="app">
+  <div id="sidebarMount"></div>
 
-  <!-- ── Sidebar ── -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-hex"></div>
-      <span>LogiTrack</span>
-    </div>
-
-    <div class="sidebar-section">
-      <div class="sidebar-label">Principal</div>
-      <div class="nav-item active" data-module="dashboard" onclick="navigate('dashboard')">
-        <span class="icon">⊞</span> Dashboard
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Dashboard</span>
+      <div class="topbar-right">
+        <span class="badge-pill" id="todayDate"></span>
       </div>
     </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Geografía</div>
-      <div class="nav-item" data-module="departamento" onclick="navigate('departamento')">
-        <span class="icon">🗺</span> Departamentos
-      </div>
-      <div class="nav-item" data-module="ciudad" onclick="navigate('ciudad')">
-        <span class="icon">🏙</span> Ciudades
-      </div>
-    </div>
+    <div class="page-body">
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Organización</div>
-      <div class="nav-item" data-module="rol" onclick="navigate('rol')">
-        <span class="icon">🔑</span> Roles
+      <!-- KPI Cards -->
+      <div class="stats-grid" id="kpiGrid">
+        <div class="stat-card"><div class="stat-label">Total Inventarios</div><div class="stat-value" id="kpiTotal">—</div><div class="stat-icon">📦</div></div>
+        <div class="stat-card danger"><div class="stat-label">Stock Crítico</div><div class="stat-value" id="kpiCritico">—</div><div class="stat-icon">⚠️</div></div>
+        <div class="stat-card warning"><div class="stat-label">Stock Bajo</div><div class="stat-value" id="kpiBajo">—</div><div class="stat-icon">📉</div></div>
+        <div class="stat-card success"><div class="stat-label">Bodegas Activas</div><div class="stat-value" id="kpiBodegas">—</div><div class="stat-icon">🏭</div></div>
+        <div class="stat-card info"><div class="stat-label">Productos</div><div class="stat-value" id="kpiProductos">—</div><div class="stat-icon">🏷️</div></div>
+        <div class="stat-card"><div class="stat-label">Usuarios</div><div class="stat-value" id="kpiUsuarios">—</div><div class="stat-icon">👥</div></div>
       </div>
-      <div class="nav-item" data-module="persona" onclick="navigate('persona')">
-        <span class="icon">👤</span> Personas
-      </div>
-      <div class="nav-item" data-module="usuario" onclick="navigate('usuario')">
-        <span class="icon">👥</span> Usuarios
-      </div>
-    </div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Inventario</div>
-      <div class="nav-item" data-module="categoria" onclick="navigate('categoria')">
-        <span class="icon">🏷</span> Categorías
-      </div>
-      <div class="nav-item" data-module="producto" onclick="navigate('producto')">
-        <span class="icon">📦</span> Productos
-      </div>
-      <div class="nav-item" data-module="bodega" onclick="navigate('bodega')">
-        <span class="icon">🏭</span> Bodegas
-      </div>
-      <div class="nav-item" data-module="inventario" onclick="navigate('inventario')">
-        <span class="icon">📋</span> Inventario
-      </div>
-      <div class="nav-item" data-module="movimiento" onclick="navigate('movimiento')">
-        <span class="icon">🔄</span> Movimientos
-      </div>
-    </div>
+      <!-- Two columns -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">Sistema</div>
-      <div class="nav-item" data-module="auditoria" onclick="navigate('auditoria')">
-        <span class="icon">🔍</span> Auditoría
-      </div>
-    </div>
-
-    <div class="sidebar-footer">
-      <div class="user-chip">
-        <div class="user-avatar" id="userAvatar">U</div>
-        <div class="user-info">
-          <div class="user-name" id="currentUser">usuario</div>
-          <div class="user-role">Operador</div>
+        <!-- Stock por bodega -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Stock por Bodega</div>
+              <div class="card-subtitle">Unidades totales en cada bodega</div>
+            </div>
+          </div>
+          <div id="stockBodegaList">
+            <div class="loader-wrap"><div class="spinner"></div> Cargando...</div>
+          </div>
         </div>
-        <button class="btn-logout" onclick="logout()" title="Cerrar sesión">⏻</button>
+
+        <!-- Productos más movidos -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Top Productos</div>
+              <div class="card-subtitle">Los 10 más movidos del sistema</div>
+            </div>
+          </div>
+          <div id="topProductosList">
+            <div class="loader-wrap"><div class="spinner"></div> Cargando...</div>
+          </div>
+        </div>
       </div>
-    </div>
-  </aside>
 
-  <!-- ── Main ── -->
-  <div class="main">
-    <header class="topbar">
-      <div class="page-title" id="pageTitle">Dashboard</div>
-      <div class="topbar-actions">
-        <span style="font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace" id="dateLabel"></span>
+      <!-- Stock crítico alert table -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⚠️ Alertas de Stock Crítico</div>
+            <div class="card-subtitle">Inventarios por debajo del mínimo</div>
+          </div>
+          <a href="inventario.html" class="btn btn-outline btn-sm">Ver todos</a>
+        </div>
+        <div id="criticoTable">
+          <div class="loader-wrap"><div class="spinner"></div> Cargando...</div>
+        </div>
       </div>
-    </header>
 
-    <div class="content" id="content">
-      <!-- Cargado por JS -->
     </div>
-  </div>
-
+  </main>
 </div>
 
-<!-- ── Modal ── -->
-<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modalTitle">Modal</span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-    <div class="modal-footer">
-      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn-primary" onclick="saveModal()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── Toasts ── -->
-<div id="toastContainer"></div>
-
-<script src="js/api.js"></script>
-<script src="js/app.js"></script>
+<div id="toast-container"></div>
+<script src="shared.js"></script>
 <script>
-  // Cerrar modal al hacer click en overlay
-  function handleOverlayClick(e) {
-    if (e.target === document.getElementById('modal')) closeModal();
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+  document.getElementById('todayDate').textContent =
+    new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  async function loadDashboard() {
+    try {
+      const [inventarios, bodegas, productos, usuarios, criticos, bajos, reporte] = await Promise.all([
+        API.get('/api/inventario'),
+        API.get('/api/bodega'),
+        API.get('/api/producto'),
+        API.get('/api/usuario').catch(() => []),
+        API.get('/api/inventario/stock-critico'),
+        API.get('/api/inventario/stock-bajo'),
+        API.get('/api/reporte/general').catch(() => null)
+      ]);
+
+      document.getElementById('kpiTotal').textContent    = fmtNum(inventarios.length);
+      document.getElementById('kpiCritico').textContent  = fmtNum(criticos.length);
+      document.getElementById('kpiBajo').textContent     = fmtNum(bajos.length);
+      document.getElementById('kpiBodegas').textContent  = fmtNum(bodegas.filter(b => b.estado === 'ACTIVO').length);
+      document.getElementById('kpiProductos').textContent= fmtNum(productos.length);
+      document.getElementById('kpiUsuarios').textContent = fmtNum(usuarios.length || '—');
+
+      // Stock por bodega
+      if (reporte && reporte.stockPorBodega) {
+        const max = Math.max(...reporte.stockPorBodega.map(b => b.stockTotal), 1);
+        document.getElementById('stockBodegaList').innerHTML =
+          reporte.stockPorBodega.map(b => `
+            <div style="margin-bottom:14px">
+              <div class="flex justify-between" style="margin-bottom:4px">
+                <span style="font-size:13px">${b.nombreBodega}</span>
+                <span style="font-size:13px;color:var(--gold)">${fmtNum(b.stockTotal)}</span>
+              </div>
+              <div style="background:rgba(255,255,255,.06);border-radius:4px;height:6px;overflow:hidden">
+                <div style="height:100%;background:var(--gold);border-radius:4px;width:${Math.round(b.stockTotal/max*100)}%;transition:width 1s"></div>
+              </div>
+              <div style="font-size:11px;color:var(--slate);margin-top:2px">${b.totalProductos} productos · ${b.ciudad}</div>
+            </div>`).join('');
+      } else {
+        document.getElementById('stockBodegaList').innerHTML = '<div class="empty-state"><div class="empty-icon">🏭</div>Sin datos disponibles</div>';
+      }
+
+      // Top productos
+      if (reporte && reporte.productosMasMovidos && reporte.productosMasMovidos.length) {
+        document.getElementById('topProductosList').innerHTML = `
+          <table><thead><tr>
+            <th>#</th><th>Producto</th><th>Movimientos</th><th>Unidades</th>
+          </tr></thead><tbody>
+          ${reporte.productosMasMovidos.slice(0,8).map((p,i) => `
+            <tr>
+              <td style="color:var(--slate)">${i+1}</td>
+              <td><div>${p.nombreProducto}</div><div style="font-size:11px;color:var(--slate)">${p.codigoProducto}</div></td>
+              <td><span class="badge badge-info">${fmtNum(p.totalMovimientos)}</span></td>
+              <td>${fmtNum(p.totalUnidadesMovidas)}</td>
+            </tr>`).join('')}
+          </tbody></table>`;
+      } else {
+        document.getElementById('topProductosList').innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div>Sin movimientos registrados</div>';
+      }
+
+      // Críticos
+      if (criticos.length === 0) {
+        document.getElementById('criticoTable').innerHTML = '<div class="empty-state" style="color:var(--success)"><div class="empty-icon">✅</div>¡Todos los inventarios están en niveles adecuados!</div>';
+      } else {
+        document.getElementById('criticoTable').innerHTML = `
+          <div class="table-wrap"><table><thead><tr>
+            <th>Producto</th><th>Bodega</th><th>Actual</th><th>Mínimo</th><th>Estado</th>
+          </tr></thead><tbody>
+          ${criticos.map(i => `
+            <tr>
+              <td><strong>${i.producto.nombre}</strong><br><span style="font-size:11px;color:var(--slate)">${i.producto.codigo}</span></td>
+              <td>${i.bodega.nombre}</td>
+              <td style="color:#f28b8b;font-weight:600">${i.cantidadActual}</td>
+              <td>${i.stockMinimo}</td>
+              <td><span class="badge badge-danger">CRÍTICO</span></td>
+            </tr>`).join('')}
+          </tbody></table></div>`;
+      }
+
+    } catch(e) {
+      toast(e.message, 'danger');
+    }
   }
 
-  // Fecha en topbar
-  document.getElementById('dateLabel').textContent =
-    new Date().toLocaleDateString('es-CO', { weekday:'short', day:'numeric', month:'short' });
+  loadDashboard();
 </script>
-
 </body>
 </html>

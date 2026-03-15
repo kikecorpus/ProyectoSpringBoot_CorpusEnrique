@@ -170,7 +170,9 @@ DELIMITER ;
 -- ------------------------------------------------------------
 INSERT INTO Rol (nombre, descripcion) VALUES
 ('ADMIN',    'Administrador del sistema con acceso total'),
-('OPERARIO', 'Usuario operativo que gestiona movimientos de inventario');
+('OPERARIO', 'Usuario operativo que gestiona movimientos de inventario'),
+('SUPERVISOR', 'Administra bodegas y supervisa operarios'); 
+;
 
 
 
@@ -180,7 +182,10 @@ INSERT INTO Persona (nombre, apellido, tipo_documento, numero_documento) VALUES
 ('Andres',    'Torres',   'CC', '1005551234'),
 ('Lucia',     'Gomez',    'CC', '1003334444'),
 ('Felipe',    'Herrera',  'CC', '1007778888'),
-('Valentina', 'Castillo', 'CC', '1002221111');
+('Valentina', 'Castillo', 'CC', '1002221111'),
+('kike',      'corpus',   'CC', '1008889999');
+;
+
 
 
 
@@ -190,8 +195,9 @@ INSERT INTO Usuario (username, contrasena, estado, persona_id, rol_id) VALUES
 ('andres.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   3, 2),
 ('lucia.operario',  '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   4, 2),
 ('felipe.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   5, 2),
-('vale.operario',   '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'INACTIVO', 6, 2);
-
+('vale.operario',   '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'INACTIVO', 6, 2),
+('kike.supervisor', '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa', 'ACTIVO', 7, 3);
+;
 
 
 INSERT INTO Departamento (nombre) VALUES

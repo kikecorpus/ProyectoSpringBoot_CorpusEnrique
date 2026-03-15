@@ -28,6 +28,12 @@ public class JwtService {
                 // Información principal del token (quién es el usuario)
                 .setSubject(user.getUsername())
 
+                //  Rol del usuario para control de acceso en el frontend
+                .claim("rol", user.getAuthorities().stream()
+                        .findFirst()
+                        .map(a -> a.getAuthority())
+                        .orElse(""))
+
                 // Fecha en que se crea el token
                 .setIssuedAt(new Date())
 
@@ -52,6 +58,18 @@ public class JwtService {
                     .getSubject();
         } catch (Exception e) {
 
+            return null;
+        }
+    }
+
+    public String getRolFromToken(String token) {
+        try {
+            return Jwts.parser()
+                    .setSigningKey(getKey())
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .get("rol", String.class);
+        } catch (Exception e) {
             return null;
         }
     }

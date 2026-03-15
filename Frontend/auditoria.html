@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Auditoría</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarMount"></div>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Auditoría del Sistema</span>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" onclick="load()">🔄 Actualizar</button>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+        <div class="stat-card success"><div class="stat-label">INSERT</div><div class="stat-value" id="cntInsert">—</div></div>
+        <div class="stat-card warning"><div class="stat-label">UPDATE</div><div class="stat-value" id="cntUpdate">—</div></div>
+        <div class="stat-card danger"><div class="stat-label">DELETE</div><div class="stat-value" id="cntDelete">—</div></div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input class="search-input" id="searchInput" placeholder="Buscar entidad, usuario..." oninput="filterTable()">
+          </div>
+          <select class="form-control" id="filterOp" onchange="filterTable()" style="width:150px">
+            <option value="">Todas operaciones</option>
+            <option>INSERT</option><option>UPDATE</option><option>DELETE</option>
+          </select>
+          <select class="form-control" id="filterEnt" onchange="filterTable()" style="width:180px">
+            <option value="">Todas las entidades</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Operación</th><th>Entidad</th><th>Registro ID</th>
+              <th>Usuario</th><th>Fecha</th><th>Ver cambios</th>
+            </tr></thead>
+            <tbody id="tableBody">
+              <tr><td colspan="6"><div class="loader-wrap"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal cambios -->
+<div class="modal-overlay" id="modalDetalle">
+  <div class="modal" style="width:700px">
+    <div class="modal-header">
+      <span class="modal-title">Detalle de Cambios</span>
+      <button class="modal-close" onclick="closeModal('modalDetalle')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate);margin-bottom:10px">Valores Anteriores</div>
+          <pre id="valAnt" style="background:rgba(224,92,92,.08);border:1px solid rgba(224,92,92,.2);border-radius:8px;padding:14px;font-size:12px;overflow:auto;max-height:340px;color:#f28b8b;white-space:pre-wrap"></pre>
+        </div>
+        <div>
+          <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate);margin-bottom:10px">Valores Nuevos</div>
+          <pre id="valNuev" style="background:rgba(76,175,125,.08);border:1px solid rgba(76,175,125,.2);border-radius:8px;padding:14px;font-size:12px;overflow:auto;max-height:340px;color:#6dd5a8;white-space:pre-wrap"></pre>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalDetalle')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+  let allData = [];
+
+  const opBadge = { INSERT: 'badge-success', UPDATE: 'badge-warning', DELETE: 'badge-danger' };
+
+  async function load() {
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td colspan="6"><div class="loader-wrap"><div class="spinner"></div></div></td></tr>';
+    try {
+      allData = await API.get('/api/auditoria');
+
+      // Counters
+      const counts = { INSERT:0, UPDATE:0, DELETE:0 };
+      const entidades = new Set();
+      allData.forEach(a => { counts[a.tipoOperacion]++; entidades.add(a.entidadAfectada); });
+      document.getElementById('cntInsert').textContent = fmtNum(counts.INSERT);
+      document.getElementById('cntUpdate').textContent = fmtNum(counts.UPDATE);
+      document.getElementById('cntDelete').textContent = fmtNum(counts.DELETE);
+
+      const entSel = document.getElementById('filterEnt');
+      entSel.innerHTML = '<option value="">Todas las entidades</option>' +
+        [...entidades].sort().map(e => `<option>${e}</option>`).join('');
+
+      renderTable(allData);
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  function renderTable(data) {
+    if (!data.length) {
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🛡️</div>Sin registros de auditoría</div></td></tr>';
+      return;
+    }
+    document.getElementById('tableBody').innerHTML = [...data].reverse().map(a => `
+      <tr>
+        <td><span class="badge ${opBadge[a.tipoOperacion]||'badge-neutral'}">${a.tipoOperacion}</span></td>
+        <td>${a.entidadAfectada}</td>
+        <td style="color:var(--slate)">#${a.registroId}</td>
+        <td style="font-size:12px">${a.usuario?.username||'Sistema'}</td>
+        <td style="font-size:12px;color:var(--slate)">${fmtDate(a.fechaHora)}</td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="verDetalle(${a.idAuditoria})">
+            🔍 Ver
+          </button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function filterTable() {
+    const q   = document.getElementById('searchInput').value.toLowerCase();
+    const op  = document.getElementById('filterOp').value;
+    const ent = document.getElementById('filterEnt').value;
+    renderTable(allData.filter(a =>
+      (!q   || (a.entidadAfectada+(a.usuario?.username||'')).toLowerCase().includes(q)) &&
+      (!op  || a.tipoOperacion === op) &&
+      (!ent || a.entidadAfectada === ent)
+    ));
+  }
+
+  function verDetalle(id) {
+    const a = allData.find(x => x.idAuditoria === id);
+    if (!a) return;
+    document.getElementById('valAnt').textContent  = a.valoresAnteriores
+      ? JSON.stringify(a.valoresAnteriores, null, 2) : '(sin valores anteriores)';
+    document.getElementById('valNuev').textContent = a.valoresNuevos
+      ? JSON.stringify(a.valoresNuevos, null, 2) : '(sin valores nuevos)';
+    openModal('modalDetalle');
+  }
+
+  load();
+</script>
+</body>
+</html>

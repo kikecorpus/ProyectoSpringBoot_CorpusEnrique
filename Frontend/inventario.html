@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Inventario</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarMount"></div>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Gestión de Inventario</span>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalInventario');resetForm()">+ Nuevo Inventario</button>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+        <div class="stat-card"><div class="stat-label">Total Registros</div><div class="stat-value" id="sTotal">—</div></div>
+        <div class="stat-card danger"><div class="stat-label">Stock Crítico</div><div class="stat-value" id="sCritico">—</div></div>
+        <div class="stat-card warning"><div class="stat-label">Stock Bajo (&lt;10)</div><div class="stat-value" id="sBajo">—</div></div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input class="search-input" id="searchInput" placeholder="Buscar producto o bodega..." oninput="filterTable()">
+          </div>
+          <select class="form-control" id="filterEstado" onchange="filterTable()" style="width:150px">
+            <option value="">Todos estados</option>
+            <option>ACTIVO</option><option>INACTIVO</option>
+          </select>
+          <select class="form-control" id="filterCritico" onchange="filterTable()" style="width:160px">
+            <option value="">Todos</option>
+            <option value="true">Solo críticos</option>
+            <option value="false">Sin alertas</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="loadInventarios()">🔄 Actualizar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Producto</th><th>Código</th><th>Bodega</th>
+              <th>Actual</th><th>Mín</th><th>Máx</th>
+              <th>Estado</th><th>Alerta</th><th>Última Act.</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="invBody">
+              <tr><td colspan="10"><div class="loader-wrap"><div class="spinner"></div> Cargando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalInventario">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Nuevo Inventario</span>
+      <button class="modal-close" onclick="closeModal('modalInventario')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Producto</label>
+          <select class="form-control" id="fProducto" required></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bodega</label>
+          <select class="form-control" id="fBodega" required></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cantidad Actual</label>
+          <input type="number" min="0" class="form-control" id="fCantidad" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock Mínimo</label>
+          <input type="number" min="0" class="form-control" id="fStockMin" placeholder="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock Máximo</label>
+          <input type="number" min="1" class="form-control" id="fStockMax" placeholder="100">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-control" id="fEstado">
+            <option>ACTIVO</option><option>INACTIVO</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalInventario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+
+  let allData = [], editId = null;
+
+  async function loadInventarios() {
+    document.getElementById('invBody').innerHTML =
+      '<tr><td colspan="10"><div class="loader-wrap"><div class="spinner"></div> Cargando...</div></td></tr>';
+    try {
+      const [data, criticos, bajos] = await Promise.all([
+        API.get('/api/inventario'),
+        API.get('/api/inventario/stock-critico'),
+        API.get('/api/inventario/stock-bajo')
+      ]);
+      allData = data;
+      document.getElementById('sTotal').textContent   = fmtNum(data.length);
+      document.getElementById('sCritico').textContent = fmtNum(criticos.length);
+      document.getElementById('sBajo').textContent    = fmtNum(bajos.length);
+      renderTable(data);
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  function renderTable(data) {
+    if (!data.length) {
+      document.getElementById('invBody').innerHTML =
+        '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📦</div>Sin registros</div></td></tr>';
+      return;
+    }
+    document.getElementById('invBody').innerHTML = data.map(i => `
+      <tr>
+        <td><strong>${i.producto.nombre}</strong></td>
+        <td style="color:var(--slate)">${i.producto.codigo}</td>
+        <td>${i.bodega.nombre}</td>
+        <td style="font-weight:600;color:${i.stockCritico?'#f28b8b':'inherit'}">${i.cantidadActual}</td>
+        <td>${i.stockMinimo}</td>
+        <td>${i.stockMaximo}</td>
+        <td><span class="badge badge-${i.estado==='ACTIVO'?'success':'neutral'}">${i.estado}</span></td>
+        <td>${i.stockCritico
+          ? '<span class="badge badge-danger">⚠ CRÍTICO</span>'
+          : '<span class="badge badge-success">✓ OK</span>'}</td>
+        <td style="color:var(--slate);font-size:12px">${fmtDate(i.ultimaActualizacion)}</td>
+        <td>
+          <div class="flex gap-2">
+            <button class="btn btn-outline btn-sm" onclick="editar(${i.idInventario})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminar(${i.idInventario})">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  function filterTable() {
+    const q     = document.getElementById('searchInput').value.toLowerCase();
+    const est   = document.getElementById('filterEstado').value;
+    const crit  = document.getElementById('filterCritico').value;
+    renderTable(allData.filter(i => {
+      const text = (i.producto.nombre + i.producto.codigo + i.bodega.nombre).toLowerCase();
+      const matchQ    = !q    || text.includes(q);
+      const matchEst  = !est  || i.estado === est;
+      const matchCrit = crit === '' || String(i.stockCritico) === crit;
+      return matchQ && matchEst && matchCrit;
+    }));
+  }
+
+  async function loadSelects() {
+    const [productos, bodegas] = await Promise.all([
+      API.get('/api/producto'), API.get('/api/bodega')
+    ]);
+    document.getElementById('fProducto').innerHTML =
+      productos.map(p => `<option value="${p.idProducto}">${p.nombre} (${p.codigo})</option>`).join('');
+    document.getElementById('fBodega').innerHTML =
+      bodegas.map(b => `<option value="${b.idBodega}">${b.nombre}</option>`).join('');
+  }
+
+  function resetForm() {
+    editId = null;
+    document.getElementById('modalTitle').textContent = 'Nuevo Inventario';
+    ['fCantidad','fStockMin','fStockMax'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fEstado').value = 'ACTIVO';
+    loadSelects();
+  }
+
+  async function editar(id) {
+    const inv = allData.find(i => i.idInventario === id);
+    if (!inv) return;
+    editId = id;
+    document.getElementById('modalTitle').textContent = 'Editar Inventario';
+    await loadSelects();
+    document.getElementById('fProducto').value  = inv.producto.idProducto;
+    document.getElementById('fBodega').value    = inv.bodega.idBodega;
+    document.getElementById('fCantidad').value  = inv.cantidadActual;
+    document.getElementById('fStockMin').value  = inv.stockMinimo;
+    document.getElementById('fStockMax').value  = inv.stockMaximo;
+    document.getElementById('fEstado').value    = inv.estado;
+    openModal('modalInventario');
+  }
+
+  async function guardar() {
+    const body = {
+      productoId:    Number(document.getElementById('fProducto').value),
+      bodegaId:      Number(document.getElementById('fBodega').value),
+      cantidadActual:Number(document.getElementById('fCantidad').value),
+      stockMinimo:   Number(document.getElementById('fStockMin').value),
+      stockMaximo:   Number(document.getElementById('fStockMax').value),
+      estado:        document.getElementById('fEstado').value,
+    };
+    try {
+      if (editId) { await API.put(`/api/inventario/${editId}`, body); toast('Inventario actualizado','success'); }
+      else        { await API.post('/api/inventario', body);          toast('Inventario creado','success'); }
+      closeModal('modalInventario');
+      loadInventarios();
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  async function eliminar(id) {
+    if (!confirmAction('¿Eliminar este inventario?')) return;
+    try { await API.delete(`/api/inventario/${id}`); toast('Eliminado','success'); loadInventarios(); }
+    catch(e) { toast(e.message,'danger'); }
+  }
+
+  loadInventarios();
+</script>
+</body>
+</html>

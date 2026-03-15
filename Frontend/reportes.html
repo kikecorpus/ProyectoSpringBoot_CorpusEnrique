@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Reportes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarMount"></div>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Reportes del Sistema</span>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="loadReporte()">🔄 Actualizar</button>
+        <button class="btn btn-outline btn-sm" onclick="exportar()">⬇ Exportar CSV</button>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <!-- Section 1: Stock por bodega -->
+      <div style="margin-bottom:28px">
+        <h2 class="font-serif" style="font-size:20px;margin-bottom:16px;color:var(--gold)">
+          📊 Stock Total por Bodega
+        </h2>
+        <div id="stockBodega">
+          <div class="loader-wrap"><div class="spinner"></div> Cargando reporte...</div>
+        </div>
+      </div>
+
+      <!-- Section 2: Productos más movidos -->
+      <div>
+        <h2 class="font-serif" style="font-size:20px;margin-bottom:16px;color:var(--gold)">
+          🏆 Top 10 Productos Más Movidos
+        </h2>
+        <div id="topProductos">
+          <div class="loader-wrap"><div class="spinner"></div> Cargando reporte...</div>
+        </div>
+      </div>
+
+      <!-- Section 3: Stock crítico y bajo -->
+      <div style="margin-top:28px">
+        <h2 class="font-serif" style="font-size:20px;margin-bottom:16px;color:var(--gold)">
+          ⚠️ Alertas de Stock
+        </h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Stock Crítico</div>
+              <span class="badge badge-danger" id="cntCritico">—</span>
+            </div>
+            <div id="tablaCritico">
+              <div class="loader-wrap"><div class="spinner"></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Stock Bajo (&lt; 10 unidades)</div>
+              <span class="badge badge-warning" id="cntBajo">—</span>
+            </div>
+            <div id="tablaBajo">
+              <div class="loader-wrap"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+
+  let reportData = null;
+
+  async function loadReporte() {
+    try {
+      const [reporte, criticos, bajos] = await Promise.all([
+        API.get('/api/reporte/general'),
+        API.get('/api/inventario/stock-critico'),
+        API.get('/api/inventario/stock-bajo')
+      ]);
+      reportData = reporte;
+
+      // Stock por bodega cards
+      if (reporte.stockPorBodega && reporte.stockPorBodega.length) {
+        const maxStock = Math.max(...reporte.stockPorBodega.map(b => b.stockTotal), 1);
+        document.getElementById('stockBodega').innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+          ${reporte.stockPorBodega.map(b => `
+            <div class="card" style="position:relative;overflow:hidden">
+              <div style="position:absolute;top:0;left:0;width:100%;height:3px;background:var(--gold);opacity:.7"></div>
+              <div style="font-size:12px;color:var(--slate);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${b.ciudad}</div>
+              <div style="font-family:'Playfair Display',serif;font-size:22px;margin-bottom:4px">${b.nombreBodega}</div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+                <span style="font-size:13px;color:var(--slate)">${b.totalProductos} productos</span>
+                <span style="font-size:18px;color:var(--gold);font-weight:700">${fmtNum(b.stockTotal)}</span>
+              </div>
+              <div style="background:rgba(255,255,255,.06);border-radius:4px;height:6px">
+                <div style="height:100%;background:var(--gold);border-radius:4px;width:${Math.round(b.stockTotal/maxStock*100)}%"></div>
+              </div>
+            </div>`).join('')}
+          </div>`;
+      } else {
+        document.getElementById('stockBodega').innerHTML = '<div class="empty-state"><div class="empty-icon">🏭</div>Sin datos de bodegas</div>';
+      }
+
+      // Top productos
+      if (reporte.productosMasMovidos && reporte.productosMasMovidos.length) {
+        const maxMov = Math.max(...reporte.productosMasMovidos.map(p => p.totalMovimientos), 1);
+        document.getElementById('topProductos').innerHTML = `
+          <div class="card">
+            <div class="table-wrap">
+              <table><thead><tr>
+                <th>Pos</th><th>Producto</th><th>Código</th>
+                <th>Movimientos</th><th>Unidades movidas</th><th>% del total</th>
+              </tr></thead><tbody>
+              ${reporte.productosMasMovidos.map((p,i) => `
+                <tr>
+                  <td>
+                    <span style="font-family:'Playfair Display',serif;font-size:18px;color:${i<3?'var(--gold)':'var(--slate)'}">${i+1}</span>
+                  </td>
+                  <td><strong>${p.nombreProducto}</strong></td>
+                  <td style="color:var(--slate)">${p.codigoProducto}</td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div style="flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:6px;min-width:80px">
+                        <div style="height:100%;background:var(--gold);border-radius:4px;width:${Math.round(p.totalMovimientos/maxMov*100)}%"></div>
+                      </div>
+                      <span>${fmtNum(p.totalMovimientos)}</span>
+                    </div>
+                  </td>
+                  <td>${fmtNum(p.totalUnidadesMovidas)}</td>
+                  <td style="color:var(--slate)">${Math.round(p.totalMovimientos/maxMov*100)}%</td>
+                </tr>`).join('')}
+              </tbody></table>
+            </div>
+          </div>`;
+      } else {
+        document.getElementById('topProductos').innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div>Sin movimientos registrados</div>';
+      }
+
+      // Críticos
+      document.getElementById('cntCritico').textContent = criticos.length;
+      document.getElementById('tablaCritico').innerHTML = criticos.length === 0
+        ? '<div class="empty-state" style="color:var(--success)">✅ Sin alertas críticas</div>'
+        : `<div class="table-wrap"><table><thead><tr><th>Producto</th><th>Bodega</th><th>Stock</th><th>Mín</th></tr></thead><tbody>
+           ${criticos.map(i => `<tr>
+             <td>${i.producto.nombre}</td>
+             <td style="color:var(--slate)">${i.bodega.nombre}</td>
+             <td style="color:#f28b8b;font-weight:700">${i.cantidadActual}</td>
+             <td>${i.stockMinimo}</td>
+           </tr>`).join('')}
+           </tbody></table></div>`;
+
+      // Bajos
+      document.getElementById('cntBajo').textContent = bajos.length;
+      document.getElementById('tablaBajo').innerHTML = bajos.length === 0
+        ? '<div class="empty-state" style="color:var(--success)">✅ Todos por encima de 10 unidades</div>'
+        : `<div class="table-wrap"><table><thead><tr><th>Producto</th><th>Bodega</th><th>Stock</th></tr></thead><tbody>
+           ${bajos.map(i => `<tr>
+             <td>${i.producto.nombre}</td>
+             <td style="color:var(--slate)">${i.bodega.nombre}</td>
+             <td style="color:#f0c870;font-weight:700">${i.cantidadActual}</td>
+           </tr>`).join('')}
+           </tbody></table></div>`;
+
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  function exportar() {
+    if (!reportData) { toast('Primero carga el reporte','warning'); return; }
+    const rows = [['Bodega','Ciudad','Productos','Stock Total']];
+    reportData.stockPorBodega.forEach(b =>
+      rows.push([b.nombreBodega, b.ciudad, b.totalProductos, b.stockTotal]));
+    rows.push([]);
+    rows.push(['Producto','Código','Movimientos','Unidades Movidas']);
+    reportData.productosMasMovidos.forEach(p =>
+      rows.push([p.nombreProducto, p.codigoProducto, p.totalMovimientos, p.totalUnidadesMovidas]));
+
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `reporte_stockcore_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    toast('Reporte exportado','success');
+  }
+
+  loadReporte();
+</script>
+</body>
+</html>

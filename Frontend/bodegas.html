@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Bodegas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarMount"></div>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Bodegas</span>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalBod');resetForm()">+ Nueva Bodega</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input class="search-input" id="searchInput" placeholder="Buscar por nombre o ciudad..." oninput="filterTable()">
+          </div>
+          <select class="form-control" id="filterEst" onchange="filterTable()" style="width:150px">
+            <option value="">Todos estados</option>
+            <option>ACTIVO</option><option>INACTIVO</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="load()">🔄</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Nombre</th><th>Dirección</th><th>Ciudad</th>
+              <th>Capacidad</th><th>Estado</th><th>Encargado</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tableBody">
+              <tr><td colspan="7"><div class="loader-wrap"><div class="spinner"></div> Cargando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalBod">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Nueva Bodega</span>
+      <button class="modal-close" onclick="closeModal('modalBod')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Nombre</label>
+          <input type="text" class="form-control" id="fNombre" placeholder="Bodega Central">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Dirección</label>
+          <input type="text" class="form-control" id="fDir" placeholder="Calle 50 # 30-20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Capacidad (unidades)</label>
+          <input type="number" min="1" class="form-control" id="fCap" placeholder="1000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-control" id="fEstado"><option>ACTIVO</option><option>INACTIVO</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ciudad</label>
+          <select class="form-control" id="fCiudad"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Encargado</label>
+          <select class="form-control" id="fEncargado"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalBod')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+  let allData = [], editId = null;
+
+  async function load() {
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td colspan="7"><div class="loader-wrap"><div class="spinner"></div></div></td></tr>';
+    try {
+      allData = await API.get('/api/bodega');
+      renderTable(allData);
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  function renderTable(data) {
+    if (!data.length) {
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🏭</div>Sin bodegas</div></td></tr>';
+      return;
+    }
+    document.getElementById('tableBody').innerHTML = data.map(b => `
+      <tr>
+        <td><strong>${b.nombre}</strong></td>
+        <td style="color:var(--slate);font-size:12px">${b.direccion}</td>
+        <td>${b.ciudad?.nombre||'—'}<br><span style="font-size:11px;color:var(--slate)">${b.ciudad?.departamento?.nombre||''}</span></td>
+        <td>${fmtNum(b.capacidad)}</td>
+        <td><span class="badge badge-${b.estado==='ACTIVO'?'success':'neutral'}">${b.estado}</span></td>
+        <td style="font-size:12px">${b.encargado?.username||'—'}</td>
+        <td><div class="flex gap-2">
+          <button class="btn btn-outline btn-sm" onclick="editar(${b.idBodega})">✏️</button>
+          <button class="btn btn-danger btn-sm"  onclick="eliminar(${b.idBodega})">🗑</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const e = document.getElementById('filterEst').value;
+    renderTable(allData.filter(b =>
+      (!q || (b.nombre+b.ciudad?.nombre).toLowerCase().includes(q)) && (!e || b.estado===e)));
+  }
+
+  async function loadSelects() {
+    const [ciudades, usuarios] = await Promise.all([API.get('/api/ciudad'), API.get('/api/usuario')]);
+    document.getElementById('fCiudad').innerHTML    = ciudades.map(c => `<option value="${c.idCiudad}">${c.nombre} (${c.departamento?.nombre})</option>`).join('');
+    document.getElementById('fEncargado').innerHTML = usuarios.map(u => `<option value="${u.idUsuario}">${u.username}</option>`).join('');
+  }
+
+  function resetForm() { editId=null; document.getElementById('modalTitle').textContent='Nueva Bodega'; ['fNombre','fDir','fCap'].forEach(id=>document.getElementById(id).value=''); document.getElementById('fEstado').value='ACTIVO'; loadSelects(); }
+
+  async function editar(id) {
+    const b = allData.find(x=>x.idBodega===id); if(!b) return;
+    editId=id; document.getElementById('modalTitle').textContent='Editar Bodega';
+    await loadSelects();
+    document.getElementById('fNombre').value    = b.nombre;
+    document.getElementById('fDir').value       = b.direccion;
+    document.getElementById('fCap').value       = b.capacidad;
+    document.getElementById('fEstado').value    = b.estado;
+    document.getElementById('fCiudad').value    = b.ciudad?.idCiudad;
+    document.getElementById('fEncargado').value = b.encargado?.idUsuario;
+    openModal('modalBod');
+  }
+
+  async function guardar() {
+    const body = {
+      nombre:      document.getElementById('fNombre').value.trim(),
+      direccion:   document.getElementById('fDir').value.trim(),
+      capacidad:   Number(document.getElementById('fCap').value),
+      estado:      document.getElementById('fEstado').value,
+      ciudadId:    Number(document.getElementById('fCiudad').value),
+      encargadoId: Number(document.getElementById('fEncargado').value)
+    };
+    if (!body.nombre||!body.capacidad) { toast('Nombre y capacidad requeridos','warning'); return; }
+    try {
+      editId ? await API.put(`/api/bodega/${editId}`,body) : await API.post('/api/bodega',body);
+      toast(`Bodega ${editId?'actualizada':'creada'}`,'success');
+      closeModal('modalBod'); load();
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  async function eliminar(id) {
+    if (!confirmAction('¿Eliminar esta bodega?')) return;
+    try { await API.delete(`/api/bodega/${id}`); toast('Eliminada','success'); load(); }
+    catch(e) { toast(e.message,'danger'); }
+  }
+
+  load();
+</script>
+</body>
+</html>

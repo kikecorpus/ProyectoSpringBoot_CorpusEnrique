@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Movimientos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarMount"></div>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Movimientos de Inventario</span>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalMov')">+ Registrar Movimiento</button>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input class="search-input" id="searchInput" placeholder="Buscar producto, bodega..." oninput="filterTable()">
+          </div>
+          <select class="form-control" id="filterTipo" onchange="filterTable()" style="width:150px">
+            <option value="">Todos los tipos</option>
+            <option>ENTRADA</option><option>SALIDA</option>
+            <option>TRASLADO</option><option>AJUSTE</option>
+          </select>
+          <div style="display:flex;gap:8px;align-items:center">
+            <label style="font-size:12px;color:var(--slate)">Desde</label>
+            <input type="date" class="form-control" id="fDesde" style="width:150px">
+            <label style="font-size:12px;color:var(--slate)">Hasta</label>
+            <input type="date" class="form-control" id="fHasta" style="width:150px">
+            <button class="btn btn-outline btn-sm" onclick="buscarRango()">Filtrar</button>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="loadMovimientos()">🔄</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Tipo</th><th>Origen</th><th>Destino</th>
+              <th>Cant.</th><th>Ant.</th><th>Post.</th>
+              <th>Referencia</th><th>Usuario</th><th>Fecha</th>
+            </tr></thead>
+            <tbody id="movBody">
+              <tr><td colspan="9"><div class="loader-wrap"><div class="spinner"></div> Cargando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal registrar movimiento -->
+<div class="modal-overlay" id="modalMov">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar Movimiento</span>
+      <button class="modal-close" onclick="closeModal('modalMov')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Tipo de Movimiento</label>
+          <select class="form-control" id="mTipo" onchange="toggleFields()">
+            <option value="ENTRADA">ENTRADA — Ingreso de mercancía</option>
+            <option value="SALIDA">SALIDA — Despacho de mercancía</option>
+            <option value="TRASLADO">TRASLADO — Entre bodegas</option>
+            <option value="AJUSTE">AJUSTE — Corrección de stock</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="origenGroup">
+          <label class="form-label">Inventario Origen</label>
+          <select class="form-control" id="mOrigen"></select>
+        </div>
+        <div class="form-group" id="destinoGroup" style="display:none">
+          <label class="form-label">Inventario Destino</label>
+          <select class="form-control" id="mDestino"></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cantidad</label>
+          <input type="number" min="1" class="form-control" id="mCantidad" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Referencia (opcional)</label>
+          <input type="text" class="form-control" id="mRef" placeholder="ORD-001">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Observación (opcional)</label>
+          <textarea class="form-control" id="mObs" rows="2" placeholder="Descripción del movimiento..."></textarea>
+        </div>
+
+        <!-- Info card -->
+        <div class="form-group full" id="infoCard" style="display:none">
+          <div style="background:rgba(201,168,76,.08);border:1px solid var(--gold-dim);border-radius:8px;padding:12px;font-size:13px;color:var(--slate-light)" id="infoText"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalMov')">Cancelar</button>
+      <button class="btn btn-primary" onclick="registrar()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+
+  let allData = [], inventarios = [];
+
+  const tipoBadge = {
+    ENTRADA:  'badge-success',
+    SALIDA:   'badge-danger',
+    TRASLADO: 'badge-info',
+    AJUSTE:   'badge-warning'
+  };
+
+  async function loadMovimientos() {
+    document.getElementById('movBody').innerHTML =
+      '<tr><td colspan="9"><div class="loader-wrap"><div class="spinner"></div> Cargando...</div></td></tr>';
+    try {
+      allData = await API.get('/api/movimiento');
+      renderTable(allData);
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  function renderTable(data) {
+    if (!data.length) {
+      document.getElementById('movBody').innerHTML =
+        '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🔄</div>Sin movimientos</div></td></tr>';
+      return;
+    }
+    document.getElementById('movBody').innerHTML = data.slice().reverse().map(m => `
+      <tr>
+        <td><span class="badge ${tipoBadge[m.tipoMovimiento]||'badge-neutral'}">${m.tipoMovimiento}</span></td>
+        <td style="font-size:12px">${m.inventarioOrigen
+          ? `${m.inventarioOrigen.nombreProducto}<br><span style="color:var(--slate)">${m.inventarioOrigen.nombreBodega}</span>`
+          : '<span style="color:var(--slate)">—</span>'}</td>
+        <td style="font-size:12px">${m.inventarioDestino
+          ? `${m.inventarioDestino.nombreProducto}<br><span style="color:var(--slate)">${m.inventarioDestino.nombreBodega}</span>`
+          : '<span style="color:var(--slate)">—</span>'}</td>
+        <td><strong>${m.cantidad}</strong></td>
+        <td style="color:var(--slate)">${m.cantidadAnterior}</td>
+        <td style="color:var(--gold)">${m.cantidadPosterior}</td>
+        <td style="font-size:12px;color:var(--slate)">${m.referencia||'—'}</td>
+        <td style="font-size:12px">${m.usuario?.username||'—'}</td>
+        <td style="font-size:12px;color:var(--slate)">${fmtDate(m.fecha)}</td>
+      </tr>`).join('');
+  }
+
+  function filterTable() {
+    const q    = document.getElementById('searchInput').value.toLowerCase();
+    const tipo = document.getElementById('filterTipo').value;
+    renderTable(allData.filter(m => {
+      const text = [
+        m.inventarioOrigen?.nombreProducto,
+        m.inventarioOrigen?.nombreBodega,
+        m.inventarioDestino?.nombreProducto,
+        m.inventarioDestino?.nombreBodega,
+        m.referencia
+      ].filter(Boolean).join(' ').toLowerCase();
+      return (!q || text.includes(q)) && (!tipo || m.tipoMovimiento === tipo);
+    }));
+  }
+
+  async function buscarRango() {
+    const desde = document.getElementById('fDesde').value;
+    const hasta = document.getElementById('fHasta').value;
+    if (!desde || !hasta) { toast('Selecciona ambas fechas','warning'); return; }
+    try {
+      const data = await API.get(`/api/movimiento/rango?desde=${desde}&hasta=${hasta}`);
+      allData = data; renderTable(data);
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  async function loadInventariosSelect() {
+    inventarios = await API.get('/api/inventario');
+    const opts = inventarios.map(i =>
+      `<option value="${i.idInventario}">${i.producto.nombre} — ${i.bodega.nombre} (stock:${i.cantidadActual})</option>`
+    ).join('');
+    document.getElementById('mOrigen').innerHTML  = opts;
+    document.getElementById('mDestino').innerHTML = opts;
+  }
+
+  function toggleFields() {
+    const tipo = document.getElementById('mTipo').value;
+    const og = document.getElementById('origenGroup');
+    const dg = document.getElementById('destinoGroup');
+    const info = document.getElementById('infoCard');
+    const infoText = document.getElementById('infoText');
+
+    og.style.display = 'none'; dg.style.display = 'none'; info.style.display = 'none';
+
+    const msgs = {
+      ENTRADA:  '💡 ENTRADA: Incrementa el stock del inventario destino.',
+      SALIDA:   '💡 SALIDA: Decrementa el stock del inventario origen.',
+      TRASLADO: '💡 TRASLADO: Mueve stock entre dos inventarios diferentes.',
+      AJUSTE:   '💡 AJUSTE: Establece el stock del inventario al valor indicado.'
+    };
+    infoText.textContent = msgs[tipo] || '';
+    info.style.display = 'block';
+
+    if (tipo === 'ENTRADA')  { dg.style.display = 'flex'; }
+    if (tipo === 'SALIDA')   { og.style.display = 'flex'; }
+    if (tipo === 'TRASLADO') { og.style.display = 'flex'; dg.style.display = 'flex'; }
+    if (tipo === 'AJUSTE')   { og.style.display = 'flex'; }
+  }
+
+  // Open modal with fresh data
+  const origOpen = window.openModal;
+  window.openModal = async function(id) {
+    if (id === 'modalMov') {
+      await loadInventariosSelect();
+      toggleFields();
+    }
+    document.getElementById(id).classList.add('open');
+  };
+
+  async function registrar() {
+    const tipo = document.getElementById('mTipo').value;
+    const body = {
+      tipoMovimiento:      tipo,
+      cantidad:            Number(document.getElementById('mCantidad').value),
+      referencia:          document.getElementById('mRef').value || null,
+      observacion:         document.getElementById('mObs').value || null,
+      inventarioOrigenId:  (tipo === 'SALIDA' || tipo === 'TRASLADO' || tipo === 'AJUSTE')
+                            ? Number(document.getElementById('mOrigen').value) : null,
+      inventarioDestinoId: (tipo === 'ENTRADA' || tipo === 'TRASLADO')
+                            ? Number(document.getElementById('mDestino').value) : null,
+    };
+    if (!body.cantidad || body.cantidad < 1) { toast('La cantidad debe ser mayor a 0','warning'); return; }
+    try {
+      await API.post('/api/movimiento', body);
+      toast('Movimiento registrado exitosamente','success');
+      closeModal('modalMov');
+      loadMovimientos();
+    } catch(e) { toast(e.message,'danger'); }
+  }
+
+  loadMovimientos();
+</script>
+</body>
+</html>
