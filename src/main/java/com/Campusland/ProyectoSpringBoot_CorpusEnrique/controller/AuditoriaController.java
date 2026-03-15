@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ public class AuditoriaController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<List<AuditoriaResponse>> listar() {
         return ResponseEntity.ok(auditoriaService.listarAuditorias());
     }
@@ -38,7 +40,7 @@ public class AuditoriaController {
             @ApiResponse(responseCode = "404", description = "Registro no encontrado"),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<AuditoriaResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(auditoriaService.obtenerAuditoriaPorId(id));
     }
@@ -50,6 +52,7 @@ public class AuditoriaController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/entidad/{entidad}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<List<AuditoriaResponse>> listarPorEntidad(@PathVariable String entidad) {
         return ResponseEntity.ok(auditoriaService.listarPorEntidad(entidad));
     }
@@ -60,6 +63,7 @@ public class AuditoriaController {
             @ApiResponse(responseCode = "404", description = "Informacón no encontrado"),
             @ApiResponse(responseCode = "500", description = "Informacón no encontrado") })
     @GetMapping("/usuario/{usuarioId}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<List<AuditoriaResponse>> listarPorUsuario(@PathVariable Long usuarioId) {
         return ResponseEntity.ok(auditoriaService.listarPorUsuario(usuarioId));
     }
@@ -71,6 +75,7 @@ public class AuditoriaController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/tipo/{tipoOperacion}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<List<AuditoriaResponse>> listarPorTipoOperacion(
             @PathVariable Auditoria.TipoOperacion tipoOperacion) {
         return ResponseEntity.ok(auditoriaService.listarPorTipoOperacion(tipoOperacion));

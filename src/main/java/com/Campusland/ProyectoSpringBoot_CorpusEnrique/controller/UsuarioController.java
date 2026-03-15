@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UsuarioResponse> guardar(@Valid @RequestBody UsuarioRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.guardarUsuario(dto));
     }
@@ -42,6 +44,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> listar() {
         return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
@@ -52,6 +55,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UsuarioResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.obtenerUsuarioPorId(id));
     }
@@ -64,6 +68,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UsuarioResponse> actualizar(@PathVariable Long id,
                                                       @Valid @RequestBody UsuarioRequest dto) {
         return ResponseEntity.ok(usuarioService.actualizarUsuario(id, dto));
@@ -75,6 +80,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.noContent().build();

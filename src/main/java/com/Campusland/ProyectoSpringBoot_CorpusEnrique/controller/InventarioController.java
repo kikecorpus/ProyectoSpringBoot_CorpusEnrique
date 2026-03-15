@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class InventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<InventarioResponse> guardar(@Valid @RequestBody InventarioRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(inventarioService.guardarInventario(dto));
     }
@@ -42,6 +44,7 @@ public class InventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<List<InventarioResponse>> listar() {
         return ResponseEntity.ok(inventarioService.listarInventarios());
     }
@@ -52,6 +55,7 @@ public class InventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<InventarioResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(inventarioService.obtenerInventarioPorId(id));
     }
@@ -64,6 +68,7 @@ public class InventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<InventarioResponse> actualizar(@PathVariable Long id,
                                                          @Valid @RequestBody InventarioRequest dto) {
         return ResponseEntity.ok(inventarioService.actualizarInventario(id, dto));
@@ -75,6 +80,7 @@ public class InventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         inventarioService.eliminarInventario(id);
         return ResponseEntity.noContent().build();
@@ -86,6 +92,7 @@ public class InventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/stock-critico")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<List<InventarioResponse>> listarStockCritico() {
         return ResponseEntity.ok(inventarioService.listarInventariosConStockCritico());
     }
@@ -96,6 +103,7 @@ public class InventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/stock-bajo")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<List<InventarioResponse>> listarStockBajo() {
         return ResponseEntity.ok(inventarioService.listarInventariosConStockBajo());
     }

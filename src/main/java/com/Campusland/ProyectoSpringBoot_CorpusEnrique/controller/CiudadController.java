@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +33,7 @@ public class CiudadController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<CiudadResponse> guardar(@Valid @RequestBody CiudadRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ciudadService.guardarCiudad(dto));
     }
@@ -41,6 +43,7 @@ public class CiudadController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<CiudadResponse>> listar() {
         return ResponseEntity.ok(ciudadService.listarCiudades());
     }
@@ -51,6 +54,7 @@ public class CiudadController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<CiudadResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(ciudadService.obtenerCiudadPorId(id));
     }
@@ -63,6 +67,7 @@ public class CiudadController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<CiudadResponse> actualizar(@PathVariable Long id,
                                                      @Valid @RequestBody CiudadRequest dto) {
         return ResponseEntity.ok(ciudadService.actualizarCiudad(id, dto));
@@ -74,6 +79,7 @@ public class CiudadController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         ciudadService.eliminarCiudad(id);
         return ResponseEntity.noContent().build();

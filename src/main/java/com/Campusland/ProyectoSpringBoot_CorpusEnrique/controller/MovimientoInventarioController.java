@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,7 @@ public class MovimientoInventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<MovimientoInventarioResponse> registrar(
             @Valid @RequestBody MovimientoInventarioRequest dto) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -48,6 +50,7 @@ public class MovimientoInventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<List<MovimientoInventarioResponse>> listar() {
         return ResponseEntity.ok(movimientoService.listarMovimientos());
     }
@@ -58,6 +61,7 @@ public class MovimientoInventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<MovimientoInventarioResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(movimientoService.obtenerMovimientoPorId(id));
     }
@@ -69,6 +73,7 @@ public class MovimientoInventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/inventario/{inventarioId}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<List<MovimientoInventarioResponse>> listarPorInventario(
             @PathVariable Long inventarioId) {
         return ResponseEntity.ok(movimientoService.listarMovimientosPorInventario(inventarioId));
@@ -81,6 +86,7 @@ public class MovimientoInventarioController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/rango")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<List<MovimientoInventarioResponse>> listarPorRangoFechas(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {

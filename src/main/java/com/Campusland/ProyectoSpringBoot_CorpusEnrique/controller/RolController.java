@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class RolController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<RolResponse> guardar(@Valid @RequestBody RolRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(rolService.guardarRol(dto));
     }
@@ -42,6 +44,7 @@ public class RolController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<RolResponse>> listar() {
         return ResponseEntity.ok(rolService.listarRoles());
     }
@@ -52,6 +55,7 @@ public class RolController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<RolResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(rolService.obtenerRolPorId(id));
     }
@@ -64,6 +68,7 @@ public class RolController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<RolResponse> actualizar(@PathVariable Long id,
                                                   @Valid @RequestBody RolRequest dto) {
         return ResponseEntity.ok(rolService.actualizarRol(id, dto));
@@ -75,6 +80,7 @@ public class RolController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         rolService.eliminarRol(id);
         return ResponseEntity.noContent().build();

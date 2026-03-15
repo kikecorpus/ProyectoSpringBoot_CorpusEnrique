@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class CategoriaController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<CategoriaResponse> guardar(@Valid @RequestBody CategoriaRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.guardarCategoria(dto));
     }
@@ -43,6 +45,7 @@ public class CategoriaController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<List<CategoriaResponse>> listar() {
         return ResponseEntity.ok(categoriaService.listarCategorias());
     }
@@ -53,6 +56,7 @@ public class CategoriaController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<CategoriaResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(categoriaService.obtenerCategoriaPorId(id));
     }
@@ -65,6 +69,7 @@ public class CategoriaController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<CategoriaResponse> actualizar(@PathVariable Long id,
                                                         @Valid @RequestBody CategoriaRequest dto) {
         return ResponseEntity.ok(categoriaService.actualizarCategoria(id, dto));
@@ -76,6 +81,7 @@ public class CategoriaController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         categoriaService.eliminarCategoria(id);
         return ResponseEntity.noContent().build();

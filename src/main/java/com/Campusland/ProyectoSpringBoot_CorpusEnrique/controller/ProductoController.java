@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class ProductoController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ProductoResponse> guardar(@Valid @RequestBody ProductoRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productoService.guardarProducto(dto));
     }
@@ -42,6 +44,7 @@ public class ProductoController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<List<ProductoResponse>> listar() {
         return ResponseEntity.ok(productoService.listarProductos());
     }
@@ -52,6 +55,7 @@ public class ProductoController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
     public ResponseEntity<ProductoResponse> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(productoService.obtenerProductoPorId(id));
     }
@@ -64,6 +68,7 @@ public class ProductoController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ProductoResponse> actualizar(@PathVariable Long id,
                                                        @Valid @RequestBody ProductoRequest dto) {
         return ResponseEntity.ok(productoService.actualizarProducto(id, dto));
@@ -75,6 +80,7 @@ public class ProductoController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         productoService.eliminarProducto(id);
         return ResponseEntity.noContent().build();
