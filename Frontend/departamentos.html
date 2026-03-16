@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Departamentos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarMount"></div>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Departamentos</span>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalDep');resetForm()">+ Nuevo Departamento</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input class="search-input" id="searchInput" placeholder="Buscar departamento..." oninput="filterTable()">
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="load()">🔄</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>Nombre</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tableBody">
+              <tr><td colspan="3"><div class="loader-wrap"><div class="spinner"></div> Cargando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalDep">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Nuevo Departamento</span>
+      <button class="modal-close" onclick="closeModal('modalDep')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Nombre del Departamento</label>
+          <input type="text" class="form-control" id="fNombre" placeholder="Ej: Antioquia">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalDep')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+
+  let allData = [], editId = null;
+
+  async function load() {
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td colspan="3"><div class="loader-wrap"><div class="spinner"></div></div></td></tr>';
+    try {
+      allData = await API.get('/api/departamento');
+      renderTable(allData);
+    } catch(e) { toast(e.message, 'danger'); }
+  }
+
+  function renderTable(data) {
+    if (!data.length) {
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="3"><div class="empty-state"><div class="empty-icon">🗺️</div>Sin departamentos registrados</div></td></tr>';
+      return;
+    }
+    document.getElementById('tableBody').innerHTML = data.map((d, i) => `
+      <tr>
+        <td style="color:var(--slate)">${i + 1}</td>
+        <td><strong>${d.nombre}</strong></td>
+        <td><div class="flex gap-2">
+          <button class="btn btn-outline btn-sm" onclick="editar(${d.idDepartamento})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminar(${d.idDepartamento})">🗑</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    renderTable(allData.filter(d => !q || d.nombre.toLowerCase().includes(q)));
+  }
+
+  function resetForm() {
+    editId = null;
+    document.getElementById('modalTitle').textContent = 'Nuevo Departamento';
+    document.getElementById('fNombre').value = '';
+  }
+
+  async function editar(id) {
+    const d = allData.find(x => x.idDepartamento === id); if (!d) return;
+    editId = id;
+    document.getElementById('modalTitle').textContent = 'Editar Departamento';
+    document.getElementById('fNombre').value = d.nombre;
+    openModal('modalDep');
+  }
+
+  async function guardar() {
+    const body = { nombre: document.getElementById('fNombre').value.trim() };
+    if (!body.nombre) { toast('El nombre es requerido', 'warning'); return; }
+    try {
+      editId
+        ? await API.put(`/api/departamento/${editId}`, body)
+        : await API.post('/api/departamento', body);
+      toast(`Departamento ${editId ? 'actualizado' : 'creado'}`, 'success');
+      closeModal('modalDep');
+      load();
+    } catch(e) { toast(e.message, 'danger'); }
+  }
+
+  async function eliminar(id) {
+    if (!confirmAction('¿Eliminar este departamento?')) return;
+    try {
+      await API.delete(`/api/departamento/${id}`);
+      toast('Eliminado', 'success');
+      load();
+    } catch(e) { toast(e.message, 'danger'); }
+  }
+
+  load();
+</script>
+</body>
+</html>

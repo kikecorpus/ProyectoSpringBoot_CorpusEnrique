@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StockCore — Ciudades</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="app">
+  <div id="sidebarMount"></div>
+  <main class="main">
+    <div class="topbar">
+      <span class="page-title">Ciudades</span>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('modalCiudad');resetForm()">+ Nueva Ciudad</button>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="card">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <input class="search-input" id="searchInput" placeholder="Buscar ciudad o departamento..." oninput="filterTable()">
+          </div>
+          <select class="form-control" id="filterDep" onchange="filterTable()" style="width:200px">
+            <option value="">Todos los departamentos</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="load()">🔄</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Ciudad</th><th>Departamento</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="tableBody">
+              <tr><td colspan="3"><div class="loader-wrap"><div class="spinner"></div> Cargando...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalCiudad">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Nueva Ciudad</span>
+      <button class="modal-close" onclick="closeModal('modalCiudad')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Nombre de la Ciudad</label>
+          <input type="text" class="form-control" id="fNombre" placeholder="Ej: Medellín">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Departamento</label>
+          <select class="form-control" id="fDepartamento"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalCiudad')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardar()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="shared.js"></script>
+<script>
+  requireAuth();
+  document.getElementById('sidebarMount').innerHTML = getSidebarHTML();
+  initSidebar();
+
+  let allData = [], departamentos = [], editId = null;
+
+  async function load() {
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td colspan="3"><div class="loader-wrap"><div class="spinner"></div></div></td></tr>';
+    try {
+      [allData, departamentos] = await Promise.all([
+        API.get('/api/ciudad'),
+        API.get('/api/departamento')
+      ]);
+
+      // Llenar filtro de departamentos
+      const depSel = document.getElementById('filterDep');
+      depSel.innerHTML = '<option value="">Todos los departamentos</option>' +
+        departamentos.map(d => `<option value="${d.idDepartamento}">${d.nombre}</option>`).join('');
+
+      renderTable(allData);
+    } catch(e) { toast(e.message, 'danger'); }
+  }
+
+  function renderTable(data) {
+    if (!data.length) {
+      document.getElementById('tableBody').innerHTML =
+        '<tr><td colspan="3"><div class="empty-state"><div class="empty-icon">🏙️</div>Sin ciudades registradas</div></td></tr>';
+      return;
+    }
+    document.getElementById('tableBody').innerHTML = data.map(c => `
+      <tr>
+        <td><strong>${c.nombre}</strong></td>
+        <td>
+          <span class="badge badge-neutral">${c.departamento?.nombre || '—'}</span>
+        </td>
+        <td><div class="flex gap-2">
+          <button class="btn btn-outline btn-sm" onclick="editar(${c.idCiudad})">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminar(${c.idCiudad})">🗑</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  function filterTable() {
+    const q   = document.getElementById('searchInput').value.toLowerCase();
+    const dep = document.getElementById('filterDep').value;
+    renderTable(allData.filter(c =>
+      (!q   || (c.nombre + (c.departamento?.nombre || '')).toLowerCase().includes(q)) &&
+      (!dep || String(c.departamento?.idDepartamento) === dep)
+    ));
+  }
+
+  async function loadDepSelect() {
+    if (!departamentos.length) {
+      departamentos = await API.get('/api/departamento');
+    }
+    document.getElementById('fDepartamento').innerHTML =
+      departamentos.map(d => `<option value="${d.idDepartamento}">${d.nombre}</option>`).join('');
+  }
+
+  function resetForm() {
+    editId = null;
+    document.getElementById('modalTitle').textContent = 'Nueva Ciudad';
+    document.getElementById('fNombre').value = '';
+    loadDepSelect();
+  }
+
+  async function editar(id) {
+    const c = allData.find(x => x.idCiudad === id); if (!c) return;
+    editId = id;
+    document.getElementById('modalTitle').textContent = 'Editar Ciudad';
+    await loadDepSelect();
+    document.getElementById('fNombre').value       = c.nombre;
+    document.getElementById('fDepartamento').value = c.departamento?.idDepartamento;
+    openModal('modalCiudad');
+  }
+
+  async function guardar() {
+    const body = {
+      nombre:          document.getElementById('fNombre').value.trim(),
+      departamentoId:  Number(document.getElementById('fDepartamento').value)
+    };
+    if (!body.nombre) { toast('El nombre es requerido', 'warning'); return; }
+    if (!body.departamentoId) { toast('Selecciona un departamento', 'warning'); return; }
+    try {
+      editId
+        ? await API.put(`/api/ciudad/${editId}`, body)
+        : await API.post('/api/ciudad', body);
+      toast(`Ciudad ${editId ? 'actualizada' : 'creada'}`, 'success');
+      closeModal('modalCiudad');
+      load();
+    } catch(e) { toast(e.message, 'danger'); }
+  }
+
+  async function eliminar(id) {
+    if (!confirmAction('¿Eliminar esta ciudad?')) return;
+    try {
+      await API.delete(`/api/ciudad/${id}`);
+      toast('Eliminada', 'success');
+      load();
+    } catch(e) { toast(e.message, 'danger'); }
+  }
+
+  load();
+</script>
+</body>
+</html>

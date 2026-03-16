@@ -2,7 +2,7 @@
    shared.js  —  API helpers, auth guard, toast, sidebar
    ═══════════════════════════════════════════════════════════ */
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = 'http://192.168.32.60:8080';
 
 /* ── Auth helpers ── */
 function getToken() { return localStorage.getItem('token'); }
@@ -145,6 +145,15 @@ function getSidebarHTML() {
       </a>
       <a class="nav-item" href="roles.html">
         <span class="icon">🔑</span> Roles
+      </a>
+      <a class="nav-item" href="personas.html">
+        <span class="icon">👤</span> Personas
+      </a>
+      <a class="nav-item" href="departamentos.html">
+        <span class="icon">🗺️</span> Departamentos
+      </a>
+      <a class="nav-item" href="ciudades.html">
+        <span class="icon">🏙️</span> Ciudades
       </a>` : ''}
       ${isSupervisor ? `<a class="nav-item" href="auditoria.html">
         <span class="icon">🛡️</span> Auditoría

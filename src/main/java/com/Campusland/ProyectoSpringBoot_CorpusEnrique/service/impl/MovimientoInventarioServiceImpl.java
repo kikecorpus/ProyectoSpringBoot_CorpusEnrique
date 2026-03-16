@@ -67,7 +67,7 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
         int cantidadPosterior = cantidadAnterior + dto.cantidad();
 
         if (cantidadPosterior > destino.getStockMaximo()) {
-            throw new BusinessRuleException("La entrada supera el stoc041k máximo del inventario destino");
+            throw new BusinessRuleException("La entrada supera el stock máximo del inventario destino");
         }
         destino.setCantidadActual(cantidadPosterior);
         inventarioRepository.save(destino);
