@@ -10,4 +10,6 @@ public interface UsuarioService {
     UsuarioResponse obtenerUsuarioPorId(Long id);
     UsuarioResponse actualizarUsuario(Long id, UsuarioRequest dto);
     void eliminarUsuario(Long id);
+    UsuarioResponse obtenerUsuarioPorUsername(String username);
+
 }

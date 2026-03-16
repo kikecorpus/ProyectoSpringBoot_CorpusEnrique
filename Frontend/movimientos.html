@@ -57,7 +57,7 @@
 
 <!-- Modal registrar movimiento -->
 <div class="modal-overlay" id="modalMov">
-  <div class="modal">
+  <div class="modal modal-large">
     <div class="modal-header">
       <span class="modal-title">Registrar Movimiento</span>
       <button class="modal-close" onclick="closeModal('modalMov')">×</button>
@@ -183,14 +183,72 @@
     } catch(e) { toast(e.message,'danger'); }
   }
 
-  async function loadInventariosSelect() {
+async function loadInventariosSelect() {
     inventarios = await API.get('/api/inventario');
+    
+    console.log('Inventarios cargados:', inventarios.length); // ← agrega esto
+    
+    const role = getUserRole();
+    let inventariosFiltrados = inventarios;
+
+    if (role === 'OPERARIO') {
+      const yo = await API.get('/api/usuario/me');
+
+      if (!yo || !yo.bodegaId) {
+          toast('No tienes una bodega asignada. Contacta al administrador.', 'danger');
+          closeModal('modalMov');
+          return;
+      }
+
+      const invPropia  = inventarios.filter(i => i.bodega.idBodega === yo.bodegaId);
+      const invExternas = inventarios.filter(i => i.bodega.idBodega !== yo.bodegaId);
+
+      if (invPropia.length === 0) {
+          toast('No hay inventarios disponibles en tu bodega asignada.', 'warning');
+          closeModal('modalMov');
+          return;
+      }
+
+      const optsPropias = invPropia.map(i =>
+          `<option value="${i.idInventario}">${i.producto.nombre} — ${i.bodega.nombre} (stock:${i.cantidadActual})</option>`
+      ).join('');
+
+      const optsExternas = invExternas.map(i =>
+          `<option value="${i.idInventario}">${i.producto.nombre} — ${i.bodega.nombre} (stock:${i.cantidadActual})</option>`
+      ).join('');
+
+      // ENTRADA → destino = su bodega
+      // SALIDA, AJUSTE → origen = su bodega
+      // TRASLADO → origen = su bodega, destino = otras bodegas
+      document.getElementById('mOrigen').innerHTML  = optsPropias;   // su bodega
+      document.getElementById('mDestino').innerHTML = optsExternas;  // otras bodegas
+
+      // Para ENTRADA el destino debe ser su propia bodega
+      // Escuchar cambio de tipo para swappear si es ENTRADA
+      document.getElementById('mTipo').addEventListener('change', function() {
+          if (this.value === 'ENTRADA') {
+              document.getElementById('mDestino').innerHTML = optsPropias;
+          } else {
+              document.getElementById('mDestino').innerHTML = optsExternas;
+          }
+      });
+
+      // Inicializar según tipo actual (por defecto ENTRADA)
+      if (document.getElementById('mTipo').value === 'ENTRADA') {
+          document.getElementById('mDestino').innerHTML = optsPropias;
+      }
+
+      return;
+  }
+
+    // ADMIN y SUPERVISOR — ven todo
     const opts = inventarios.map(i =>
-      `<option value="${i.idInventario}">${i.producto.nombre} — ${i.bodega.nombre} (stock:${i.cantidadActual})</option>`
+        `<option value="${i.idInventario}">${i.producto.nombre} — ${i.bodega.nombre} (stock:${i.cantidadActual})</option>`
     ).join('');
+
     document.getElementById('mOrigen').innerHTML  = opts;
     document.getElementById('mDestino').innerHTML = opts;
-  }
+}
 
   function toggleFields() {
     const tipo = document.getElementById('mTipo').value;
@@ -217,14 +275,21 @@
   }
 
   // Open modal with fresh data
-  const origOpen = window.openModal;
-  window.openModal = async function(id) {
+ const origOpen = window.openModal;
+window.openModal = async function(id) {
     if (id === 'modalMov') {
-      await loadInventariosSelect();
-      toggleFields();
+        try {
+            await loadInventariosSelect();
+            toggleFields();
+            document.getElementById(id).classList.add('open'); // ← abre solo si cargó bien
+        } catch(e) {
+            toast('Error al cargar inventarios: ' + e.message, 'danger');
+            // no abre el modal si hay error
+        }
+        return; // ← importante: evita que caiga al classList de abajo
     }
     document.getElementById(id).classList.add('open');
-  };
+};
 
   async function registrar() {
     const tipo = document.getElementById('mTipo').value;

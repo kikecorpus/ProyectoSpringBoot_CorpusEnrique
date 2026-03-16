@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,6 +34,16 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
     public MovimientoInventarioResponse registrarMovimiento(MovimientoInventarioRequest dto, String username) {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + username));
+
+        boolean esOperario = usuario.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("OPERARIO"));
+        if (esOperario) {
+            if (usuario.getBodega() == null) {
+                throw new BusinessRuleException(
+                        "El operario no tiene una bodega asignada. Contacte al administrador.");
+            }
+            validarBodegaOperario(dto, usuario.getBodega().getIdBodega());
+        }
 
         MovimientoInventario movimiento = switch (dto.tipoMovimiento()) {
             case ENTRADA  -> registrarEntrada(dto, usuario);
@@ -56,7 +67,7 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
         int cantidadPosterior = cantidadAnterior + dto.cantidad();
 
         if (cantidadPosterior > destino.getStockMaximo()) {
-            throw new BusinessRuleException("La entrada supera el stock máximo del inventario destino");
+            throw new BusinessRuleException("La entrada supera el stoc041k máximo del inventario destino");
         }
         destino.setCantidadActual(cantidadPosterior);
         inventarioRepository.save(destino);
@@ -211,5 +222,47 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
                 .stream()
                 .map(movimientoMapper::entidadADto)
                 .toList();
+    }
+    private void validarBodegaOperario(MovimientoInventarioRequest dto, Long bodegaAsignada) {
+
+        switch (dto.tipoMovimiento()) {
+
+            case ENTRADA -> {
+                // Solo valida que el DESTINO sea su bodega
+                if (dto.inventarioDestinoId() != null) {
+                    Inventario destino = inventarioRepository.findById(dto.inventarioDestinoId())
+                            .orElseThrow(() -> new EntityNotFoundException(
+                                    "Inventario no encontrado con id: " + dto.inventarioDestinoId()));
+                    if (!destino.getBodega().getIdBodega().equals(bodegaAsignada)) {
+                        throw new BusinessRuleException(
+                                "Solo puedes recibir mercancía en tu bodega asignada.");
+                    }
+                }
+            }
+
+            case SALIDA, AJUSTE -> {
+                if (dto.inventarioOrigenId() != null) {
+                    Inventario origen = inventarioRepository.findById(dto.inventarioOrigenId())
+                            .orElseThrow(() -> new EntityNotFoundException(
+                                    "Inventario no encontrado con id: " + dto.inventarioOrigenId()));
+                    if (!origen.getBodega().getIdBodega().equals(bodegaAsignada)) {
+                        throw new BusinessRuleException(
+                                "Solo puedes operar inventarios de tu bodega asignada.");
+                    }
+                }
+            }
+
+            case TRASLADO -> {
+                if (dto.inventarioOrigenId() != null) {
+                    Inventario origen = inventarioRepository.findById(dto.inventarioOrigenId())
+                            .orElseThrow(() -> new EntityNotFoundException(
+                                    "Inventario no encontrado con id: " + dto.inventarioOrigenId()));
+                    if (!origen.getBodega().getIdBodega().equals(bodegaAsignada)) {
+                        throw new BusinessRuleException(
+                                "Solo puedes trasladar desde tu bodega asignada.");
+                    }
+                }
+            }
+        }
     }
 }

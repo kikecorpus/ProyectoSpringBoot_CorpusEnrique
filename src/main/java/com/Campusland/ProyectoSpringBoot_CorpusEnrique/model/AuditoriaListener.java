@@ -1,8 +1,5 @@
 package com.Campusland.ProyectoSpringBoot_CorpusEnrique.model;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Auditoria;
-import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Usuario;
 import jakarta.persistence.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -10,26 +7,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
 public class AuditoriaListener {
 
-    // EntityListeners necesitan acceso al contexto de Spring via holder estatico
     private static EntityManager entityManager;
-    private static ObjectMapper objectMapper;
 
     @Autowired
     public void setEntityManager(EntityManager em) {
         AuditoriaListener.entityManager = em;
     }
-
-    @Autowired
-    public void setObjectMapper(ObjectMapper mapper) {
-        AuditoriaListener.objectMapper = mapper;
-    }
-
 
     @PostPersist
     public void onPostPersist(Object entidad) {
@@ -52,8 +42,6 @@ public class AuditoriaListener {
         }
     }
 
-   
-    // Metodo central que guarda el registro de auditoria
     private void registrar(
             Object entidad,
             Auditoria.TipoOperacion operacion,
@@ -73,12 +61,10 @@ public class AuditoriaListener {
             entityManager.persist(auditoria);
 
         } catch (Exception e) {
-            // No interrumpir la operacion principal si la auditoria falla
             System.err.println("Error al registrar auditoria: " + e.getMessage());
         }
     }
 
-    // Obtiene el usuario autenticado desde Spring Security
     private Usuario getUsuarioActivo() {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -89,8 +75,6 @@ public class AuditoriaListener {
         return null;
     }
 
-   
-    // Extrae el ID de la entidad via reflexion
     private Long getId(Object entidad) {
         try {
             for (Field field : entidad.getClass().getDeclaredFields()) {
@@ -103,16 +87,26 @@ public class AuditoriaListener {
         return null;
     }
 
-   
-    // Convierte la entidad a Map<String, Object> para JSON
-    @SuppressWarnings("unchecked")
+    // ← OPCIÓN 2: solo campos simples, sin Jackson, sin ciclos circulares
     private Map<String, Object> toMap(Object entidad) {
+        Map<String, Object> result = new HashMap<>();
         try {
-            return objectMapper.convertValue(entidad, Map.class);
+            for (Field field : entidad.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                Class<?> type = field.getType();
+                if (type.isPrimitive()
+                        || type == String.class
+                        || type == Long.class
+                        || type == Integer.class
+                        || type == Boolean.class
+                        || type.isEnum()
+                        || type == LocalDateTime.class) {
+                    result.put(field.getName(), field.get(entidad));
+                }
+            }
         } catch (Exception e) {
-            Map<String, Object> fallback = new HashMap<>();
-            fallback.put("error", "No se pudo serializar la entidad");
-            return fallback;
+            result.put("error", "No se pudo serializar: " + e.getMessage());
         }
+        return result;
     }
 }

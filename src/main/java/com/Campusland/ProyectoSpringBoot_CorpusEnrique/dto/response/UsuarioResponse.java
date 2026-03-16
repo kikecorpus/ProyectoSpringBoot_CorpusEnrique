@@ -7,5 +7,6 @@ public record UsuarioResponse(
     String username,
     Estado estado,
     PersonaResponse persona,
-    RolResponse rol
+    RolResponse rol,
+    Long bodegaId
 ) {}

@@ -33,7 +33,7 @@ public class Bodega {
     private Ciudad ciudad;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "encargado_id", nullable = false)
+    @JoinColumn(name = "encargado_id")
     private Usuario encargado;
 
     public enum Estado {

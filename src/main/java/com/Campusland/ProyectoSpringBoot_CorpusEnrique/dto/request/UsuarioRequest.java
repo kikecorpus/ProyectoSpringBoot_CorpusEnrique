@@ -26,5 +26,8 @@ public record UsuarioRequest(
 
         @Schema(description = "ID del rol asignado al usuario", example = "1")
         @NotNull(message = "El id de rol es obligatorio")
-        Long rolId
+        Long rolId,
+
+        @Schema(description = "ID de la bodega asignada (solo operarios)", example = "1")
+        Long bodegaId
 ) {}

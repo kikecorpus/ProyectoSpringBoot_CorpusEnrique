@@ -48,9 +48,10 @@ public class JwtFilter extends OncePerRequestFilter { // Cambiamos a OncePerRequ
                 }
             }
 
-            // Continuamos la ejecución
-            filterChain.doFilter(request, response);
+
         }
+        // Continuamos la ejecución
+        filterChain.doFilter(request, response);
     }
 
     @Override

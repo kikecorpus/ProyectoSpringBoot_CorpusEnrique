@@ -4,9 +4,11 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.request.UsuarioReques
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.UsuarioResponse;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.exception.BusinessRuleException;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.mappers.UsuarioMapper;
+import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Bodega;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Persona;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Rol;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Usuario;
+import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.BodegaRepository;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.PersonaRepository;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.RolRepository;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.UsuarioRepository;
@@ -28,6 +30,8 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final PersonaRepository personaRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
+    private final BodegaRepository bodegaRepository;
+
     @Transactional
     @Override
     public UsuarioResponse guardarUsuario(UsuarioRequest dto) {
@@ -37,13 +41,20 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         Persona persona = personaRepository.findById(dto.personaId())
                 .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + dto.personaId()));
+
         Rol rol = rolRepository.findById(dto.rolId())
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con id: " + dto.rolId()));
 
-        Usuario u = usuarioMapper.dtoAEntidad(dto, persona, rol);
-        u.setContrasena(passwordEncoder.encode(dto.contrasena()));
-        usuarioRepository.save(u);
-        return usuarioMapper.entidadADto(u);
+        Bodega bodega = null;
+        if (dto.bodegaId() != null) {
+            bodega = bodegaRepository.findById(dto.bodegaId())
+                    .orElseThrow(() -> new EntityNotFoundException("Bodega no encontrada con id: " + dto.bodegaId()));
+        }
+
+    Usuario u = usuarioMapper.dtoAEntidad(dto, persona, rol, bodega);
+    u.setContrasena(passwordEncoder.encode(dto.contrasena()));
+    usuarioRepository.save(u);
+    return usuarioMapper.entidadADto(u);
     }
 
     @Override
@@ -73,8 +84,17 @@ public class UsuarioServiceImpl implements UsuarioService {
         Rol rol = rolRepository.findById(dto.rolId())
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con id: " + dto.rolId()));
 
-        usuarioMapper.actualizarEntidadDesdeDTO(u, dto, persona, rol);
-        u.setContrasena(passwordEncoder.encode(dto.contrasena()));
+        Bodega bodega = null;
+        if (dto.bodegaId() != null) {
+            bodega = bodegaRepository.findById(dto.bodegaId())
+                    .orElseThrow(() -> new EntityNotFoundException("Bodega no encontrada con id: " + dto.bodegaId()));
+        }
+        usuarioMapper.actualizarEntidadDesdeDTO(u, dto, persona, rol, bodega);
+        if (dto.contrasena() != null
+                && !dto.contrasena().isBlank()
+                && !dto.contrasena().equals("placeholder_no_change_123")) {
+            u.setContrasena(passwordEncoder.encode(dto.contrasena()));
+        }
         usuarioRepository.save(u);
         return usuarioMapper.entidadADto(u);
     }
@@ -85,5 +105,12 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new EntityNotFoundException("Usuario no encontrado con id: " + id);
         }
         usuarioRepository.deleteById(id);
+    }
+
+    @Override
+    public UsuarioResponse obtenerUsuarioPorUsername(String username) {
+        Usuario u = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado: " + username));
+        return usuarioMapper.entidadADto(u);
     }
 }

@@ -1,5 +1,6 @@
 package com.Campusland.ProyectoSpringBoot_CorpusEnrique.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -39,6 +40,11 @@ public class Usuario  implements UserDetails {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bodega_id")
+    @JsonIgnore
+    private Bodega bodega;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

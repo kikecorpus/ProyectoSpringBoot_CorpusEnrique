@@ -30,6 +30,5 @@ public record BodegaRequest(
         Long ciudadId,
 
         @Schema(description = "ID del usuario encargado de la bodega", example = "2")
-        @NotNull(message = "El id del encargado es obligatorio")
         Long encargadoId
 ) {}

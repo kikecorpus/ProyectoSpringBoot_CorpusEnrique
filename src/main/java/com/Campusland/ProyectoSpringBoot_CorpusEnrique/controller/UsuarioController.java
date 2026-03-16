@@ -85,4 +85,14 @@ public class UsuarioController {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "Obtener usuario autenticado", description = "Retorna los datos del usuario del token actual")
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR', 'OPERARIO')")
+    public ResponseEntity<UsuarioResponse> obtenerMiPerfil(
+            org.springframework.security.core.Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(usuarioService.obtenerUsuarioPorUsername(username));
+    }
+
 }

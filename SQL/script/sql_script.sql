@@ -6,6 +6,8 @@
 CREATE DATABASE IF NOT EXISTS LogiTrack;
 USE LogiTrack;
 
+select * from Auditoria;
+
 
 -- ------------------------------------------------------------
 -- Creacion base de entidades
@@ -43,6 +45,18 @@ CREATE TABLE Categoria (
     nombre       VARCHAR(100) NOT NULL UNIQUE
 );
 
+CREATE TABLE Usuario (
+    id_usuario  INT AUTO_INCREMENT PRIMARY KEY,
+    username    VARCHAR(50) NOT NULL UNIQUE,
+    contrasena  VARCHAR(255) NOT NULL,
+    estado      ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
+    persona_id  INT NOT NULL,
+    rol_id      INT NOT NULL,
+    bodega_id   INT,                         
+    CONSTRAINT fk_usuario_persona FOREIGN KEY (persona_id) REFERENCES Persona(id_persona),
+    CONSTRAINT fk_usuario_rol     FOREIGN KEY (rol_id)     REFERENCES Rol(id_rol),
+    CONSTRAINT fk_usuario_bodega  FOREIGN KEY (bodega_id)  REFERENCES Bodega(id_bodega)  
+);
 
 
 CREATE TABLE Bodega (
@@ -58,20 +72,6 @@ CREATE TABLE Bodega (
 );
 
 
-
-CREATE TABLE Usuario (
-    id_usuario  INT AUTO_INCREMENT PRIMARY KEY,
-    username    VARCHAR(50) NOT NULL UNIQUE,
-    contrasena  VARCHAR(255) NOT NULL,
-    estado      ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
-    persona_id  INT NOT NULL,
-    rol_id      INT NOT NULL,
-    bodega_id 	INT,
-    CONSTRAINT fk_usuario_persona FOREIGN KEY (persona_id) REFERENCES Persona(id_persona),
-    CONSTRAINT fk_usuario_rol     FOREIGN KEY (rol_id)     REFERENCES Rol(id_rol),
-    CONSTRAINT fk_usuario_bodega  FOREIGN KEY (bodegal_id) REFERENCES Bodega(id_bodega)
-
-);
 
 CREATE TABLE Producto (
     id_producto   INT AUTO_INCREMENT PRIMARY KEY,
@@ -183,20 +183,20 @@ INSERT INTO Rol (nombre, descripcion) VALUES
 
 INSERT INTO Persona (nombre, apellido, tipo_documento, numero_documento) VALUES
 ('David',    'Dominguez',  'CC', '1001234567'),
+('kike',      'corpus',   'CC', '1008889999'),
 ('Maria',     'Lopez',    'CC', '1009876543'),
 ('Andres',    'Torres',   'CC', '1005551234'),
 ('Lucia',     'Gomez',    'CC', '1003334444'),
 ('Felipe',    'Herrera',  'CC', '1007778888'),
-('Valentina', 'Castillo', 'CC', '1002221111'),
-('kike',      'corpus',   'CC', '1008889999');
+('Valentina', 'Castillo', 'CC', '1002221111');
 
 
-INSERT INTO Usuario (username, contrasena, estado, persona_id, rol_id, bodega_id) VALUES
-('david.admin',    '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa',    'ACTIVO',   1, 1, null),
-('andres.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   3, 2,1),
-('lucia.operario',  '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   4, 2,2),
-('felipe.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   5, 2,3),
-('vale.operario',   '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'INACTIVO', 6, 2,4),
+INSERT INTO Usuario (username, contrasena, estado, persona_id, rol_id) VALUES
+('david.admin',    '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa',    'ACTIVO',   1, 1),
+('andres.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   3, 2),
+('lucia.operario',  '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   4, 2),
+('felipe.operario', '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'ACTIVO',   5, 2),
+('vale.operario',   '$2a$10$iT0zA10HzDarXlrsFsxeQu6vJlw/vy.vFCTuOpC.1d.4KCCSwnaS2', 'INACTIVO', 6, 2),
 ('kike.supervisor', '$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa', 'ACTIVO', 2, 3),
 ('maria.supervisor','$2a$10$RAgeOnqD2BbRcYK08Hzdo.lMiTNVxXCvhp05dQrXha8.pg8Bivawa', 'ACTIVO', 7, 3);
 

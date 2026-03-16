@@ -71,6 +71,16 @@
           <label class="form-label">Persona asociada</label>
           <select class="form-control" id="fPersona"></select>
         </div>
+        
+        <div class="form-group full" id="bodegaGroup">
+          <label class="form-label">Bodega asignada 
+              <span style="color:var(--slate);font-size:10px">(solo para operarios)</span>
+          </label>
+          <select class="form-control" id="fBodega">
+              <option value="">Sin bodega</option>
+          </select>
+        </div>
+        
       </div>
     </div>
     <div class="modal-footer">
@@ -128,9 +138,17 @@
   }
 
   async function loadSelects() {
-    const [roles, personas] = await Promise.all([API.get('/api/rol'), API.get('/api/persona')]);
+    const [roles, personas, bodegas] = await Promise.all([
+      API.get('/api/rol'), 
+      API.get('/api/persona'),
+      API.get('/api/bodega')
+    ]);
     document.getElementById('fRol').innerHTML = roles.map(r => `<option value="${r.idRol}">${r.nombre}</option>`).join('');
     document.getElementById('fPersona').innerHTML = personas.map(p => `<option value="${p.idPersona}">${p.nombre} ${p.apellido} (${p.numeroDocumento})</option>`).join('');
+
+     document.getElementById('fBodega').innerHTML =
+        '<option value="">Sin bodega</option>' +
+        bodegas.map(b => `<option value="${b.idBodega}">${b.nombre}</option>`).join('');
   }
 
   function resetForm() {
@@ -152,6 +170,8 @@
     document.getElementById('fRol').value      = u.rol?.idRol;
     document.getElementById('fPersona').value  = u.persona?.idPersona;
     document.getElementById('fPass').value     = '';
+    document.getElementById('fBodega').value = u.bodegaId || '';
+
     openModal('modalUsr');
   }
 
@@ -164,7 +184,10 @@
       contrasena: pass || 'placeholder_no_change_123',
       estado:     document.getElementById('fEstado').value,
       rolId:      Number(document.getElementById('fRol').value),
-      personaId:  Number(document.getElementById('fPersona').value)
+      personaId:  Number(document.getElementById('fPersona').value),
+      bodegaId:   document.getElementById('fBodega').value
+                ? Number(document.getElementById('fBodega').value)
+                : null
     };
     if (!body.username) { toast('El username es requerido','warning'); return; }
     try {
