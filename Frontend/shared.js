@@ -4,6 +4,12 @@
 
 const API_BASE = 'http://192.168.32.60:8080';
 
+// Set favicon
+const favicon = document.createElement('link');
+favicon.rel = 'icon';
+favicon.href = 'https://img.freepik.com/foto-gratis/solido-abstracto-fondo-sala-pared-estudio-degradado-amarillo-brillante_1258-70808.jpg?semt=ais_rp_50_assets&w=740&q=80';
+document.head.appendChild(favicon);
+
 /* ── Auth helpers ── */
 function getToken() { return localStorage.getItem('token'); }
 function getUsername() { return localStorage.getItem('username') || 'Usuario'; }
