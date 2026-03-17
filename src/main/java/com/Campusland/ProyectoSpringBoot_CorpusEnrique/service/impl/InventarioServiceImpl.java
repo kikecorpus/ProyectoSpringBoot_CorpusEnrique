@@ -7,16 +7,19 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.mappers.InventarioMapper;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Bodega;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Inventario;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Producto;
+import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.Usuario;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.BodegaRepository;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.InventarioRepository;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.ProductoRepository;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.InventarioService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,8 @@ public class InventarioServiceImpl implements InventarioService {
     private final InventarioRepository inventarioRepository;
     private final ProductoRepository productoRepository;
     private final BodegaRepository bodegaRepository;
+    private final AuditoriaManualService auditoriaManualService;
+
     @Transactional
     @Override
     public InventarioResponse guardarInventario(InventarioRequest dto) {
@@ -72,8 +77,31 @@ public class InventarioServiceImpl implements InventarioService {
         Bodega bodega = bodegaRepository.findById(dto.bodegaId())
                 .orElseThrow(() -> new EntityNotFoundException("Bodega no encontrada con id: " + dto.bodegaId()));
 
+        Map<String, Object> anterior = Map.of(
+                "productoId",     i.getProducto().getIdProducto(),
+                "bodegaId",       i.getBodega().getIdBodega(),
+                "cantidadActual", i.getCantidadActual(),
+                "stockMinimo",    i.getStockMinimo(),
+                "stockMaximo",    i.getStockMaximo(),
+                "estado",         i.getEstado().name()
+        );
+
         inventarioMapper.actualizarEntidadDesdeDTO(i, dto, producto, bodega);
         inventarioRepository.save(i);
+
+        Map<String, Object> nuevo = Map.of(
+                "productoId",     i.getProducto().getIdProducto(),
+                "bodegaId",       i.getBodega().getIdBodega(),
+                "cantidadActual", i.getCantidadActual(),
+                "stockMinimo",    i.getStockMinimo(),
+                "stockMaximo",    i.getStockMaximo(),
+                "estado",         i.getEstado().name()
+        );
+
+        Usuario usuarioActivo = (Usuario) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        auditoriaManualService.registrarUpdate("Inventario", id, anterior, nuevo, usuarioActivo);
+
         return inventarioMapper.entidadADto(i);
     }
     @Transactional

@@ -13,10 +13,12 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.UsuarioReposit
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.BodegaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class BodegaServiceImpl implements BodegaService {
     private final BodegaRepository bodegaRepository;
     private final CiudadRepository ciudadRepository;
     private final UsuarioRepository usuarioRepository;
-
+    private final AuditoriaManualService auditoriaManualService;
     @Override
     @Transactional
     public BodegaResponse guardarBodega(BodegaRequest dto) {
@@ -57,6 +59,7 @@ public class BodegaServiceImpl implements BodegaService {
                 .orElseThrow(() -> new EntityNotFoundException("Bodega no encontrada con id: " + id));
         return bodegaMapper.entidadADto(b);
     }
+
     @Transactional
     @Override
     public BodegaResponse actualizarBodega(Long id, BodegaRequest dto) {
@@ -70,10 +73,32 @@ public class BodegaServiceImpl implements BodegaService {
         Usuario encargado = usuarioRepository.findById(dto.encargadoId())
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + dto.encargadoId()));
 
+        Map<String, Object> anterior = Map.of(
+                "nombre",    b.getNombre(),
+                "direccion", b.getDireccion(),
+                "capacidad", b.getCapacidad(),
+                "estado",    b.getEstado().name(),
+                "ciudadId",  b.getCiudad().getIdCiudad()
+        );
+
         bodegaMapper.actualizarEntidadDesdeDTO(b, dto, ciudad, encargado);
         bodegaRepository.save(b);
+
+        Map<String, Object> nuevo = Map.of(
+                "nombre",    b.getNombre(),
+                "direccion", b.getDireccion(),
+                "capacidad", b.getCapacidad(),
+                "estado",    b.getEstado().name(),
+                "ciudadId",  b.getCiudad().getIdCiudad()
+        );
+
+        Usuario usuarioActivo = (Usuario) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        auditoriaManualService.registrarUpdate("Bodega", id, anterior, nuevo, usuarioActivo);
+
         return bodegaMapper.entidadADto(b);
     }
+
     @Transactional
     @Override
     public void eliminarBodega(Long id) {

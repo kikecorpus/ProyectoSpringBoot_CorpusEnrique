@@ -86,6 +86,19 @@ function initSidebar() {
   document.querySelectorAll('.nav-item').forEach(a => {
     a.classList.toggle('active', a.getAttribute('href') === current);
   });
+
+  // Add hamburger button for mobile
+  const topbar = document.querySelector('.topbar');
+  if (topbar && window.innerWidth <= 900) {
+    const hamburger = document.createElement('button');
+    hamburger.innerHTML = '☰';
+    hamburger.className = 'btn btn-outline btn-sm';
+    hamburger.style.marginRight = '12px';
+    hamburger.onclick = () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    };
+    topbar.insertBefore(hamburger, topbar.firstChild);
+  }
 }
 
 /* ── Formatters ── */

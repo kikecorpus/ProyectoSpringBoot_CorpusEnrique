@@ -15,11 +15,13 @@ import com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository.UsuarioReposit
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.UsuarioService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
     private final BodegaRepository bodegaRepository;
+    private final AuditoriaManualService auditoriaManualService;
 
     @Transactional
     @Override
@@ -83,12 +86,18 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + dto.personaId()));
         Rol rol = rolRepository.findById(dto.rolId())
                 .orElseThrow(() -> new EntityNotFoundException("Rol no encontrado con id: " + dto.rolId()));
-
         Bodega bodega = null;
         if (dto.bodegaId() != null) {
             bodega = bodegaRepository.findById(dto.bodegaId())
                     .orElseThrow(() -> new EntityNotFoundException("Bodega no encontrada con id: " + dto.bodegaId()));
         }
+
+        Map<String, Object> anterior = Map.of(
+                "username", u.getUsername(),
+                "estado",   u.getEstado().name(),
+                "rolId",    u.getRol().getIdRol()
+        );
+
         usuarioMapper.actualizarEntidadDesdeDTO(u, dto, persona, rol, bodega);
         if (dto.contrasena() != null
                 && !dto.contrasena().isBlank()
@@ -96,6 +105,17 @@ public class UsuarioServiceImpl implements UsuarioService {
             u.setContrasena(passwordEncoder.encode(dto.contrasena()));
         }
         usuarioRepository.save(u);
+
+        Map<String, Object> nuevo = Map.of(
+                "username", u.getUsername(),
+                "estado",   u.getEstado().name(),
+                "rolId",    u.getRol().getIdRol()
+        );
+
+        Usuario usuarioActivo = (Usuario) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        auditoriaManualService.registrarUpdate("Usuario", id, anterior, nuevo, usuarioActivo);
+
         return usuarioMapper.entidadADto(u);
     }
     @Transactional

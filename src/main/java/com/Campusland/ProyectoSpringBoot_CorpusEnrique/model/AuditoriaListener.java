@@ -28,12 +28,6 @@ public class AuditoriaListener {
         }
     }
 
-    @PostUpdate
-    public void onPostUpdate(Object entidad) {
-        if (entidad.getClass().isAnnotationPresent(Auditable.class)) {
-            registrar(entidad, Auditoria.TipoOperacion.UPDATE, null, toMap(entidad));
-        }
-    }
 
     @PostRemove
     public void onPostRemove(Object entidad) {
@@ -87,7 +81,6 @@ public class AuditoriaListener {
         return null;
     }
 
-    // ← OPCIÓN 2: solo campos simples, sin Jackson, sin ciclos circulares
     private Map<String, Object> toMap(Object entidad) {
         Map<String, Object> result = new HashMap<>();
         try {

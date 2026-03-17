@@ -6,8 +6,6 @@
 CREATE DATABASE IF NOT EXISTS LogiTrack;
 USE LogiTrack;
 
-select * from Auditoria;
-
 
 -- ------------------------------------------------------------
 -- Creacion base de entidades
@@ -66,7 +64,7 @@ CREATE TABLE Bodega (
     capacidad    INT NOT NULL CHECK (capacidad > 0),
     estado       ENUM('ACTIVO', 'INACTIVO') NOT NULL DEFAULT 'ACTIVO',
     ciudad_id    INT NOT NULL,
-    encargado_id INT NOT NULL,
+    encargado_id INT,
     CONSTRAINT fk_bodega_ciudad    FOREIGN KEY (ciudad_id)    REFERENCES Ciudad(id_ciudad),
     CONSTRAINT fk_bodega_encargado FOREIGN KEY (encargado_id) REFERENCES Usuario(id_usuario)
 );

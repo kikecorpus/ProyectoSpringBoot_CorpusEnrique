@@ -28,6 +28,7 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
     private final MovimientoInventarioRepository movimientoRepository;
     private final InventarioRepository inventarioRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AuditoriaManualService auditoriaManualService;
 
     @Override
     @Transactional
@@ -53,6 +54,24 @@ public class MovimientoInventarioServiceImpl implements MovimientoInventarioServ
         };
 
         movimientoRepository.save(movimiento);
+
+// ── Audita el impacto en inventario
+        auditoriaManualService.registrarMovimiento(
+                dto.tipoMovimiento().name(),
+                movimiento.getInventarioOrigen() != null
+                        ? movimiento.getInventarioOrigen().getIdInventario()
+                        : movimiento.getInventarioDestino().getIdInventario(),
+                movimiento.getInventarioOrigen() != null
+                        ? movimiento.getInventarioOrigen().getProducto().getNombre()
+                        : movimiento.getInventarioDestino().getProducto().getNombre(),
+                movimiento.getInventarioOrigen() != null
+                        ? movimiento.getInventarioOrigen().getBodega().getNombre()
+                        : movimiento.getInventarioDestino().getBodega().getNombre(),
+                movimiento.getCantidadAnterior(),
+                movimiento.getCantidadPosterior(),
+                usuario
+        );
+
         return movimientoMapper.entidadADto(movimiento);
     }
 
