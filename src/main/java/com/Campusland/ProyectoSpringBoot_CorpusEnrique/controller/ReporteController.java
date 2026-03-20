@@ -2,6 +2,7 @@ package com.Campusland.ProyectoSpringBoot_CorpusEnrique.controller;
 
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.MovimientoInventarioResponse;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.ReporteGeneralResponse;
+import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.reporteExamenDTO;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.ReporteService;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.impl.ExamenSpringbootImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,13 +43,10 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.generarReporteGeneral());
     }
 
-
-    @GetMapping("/reporte/basico")
+    @GetMapping("/movimiento")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
-
-    public ResponseEntity<List<MovimientoInventarioResponse>> reporteGeneral() {
+    public ResponseEntity<reporteExamenDTO> reporte(){
         return ResponseEntity.ok(examen.reportes());
-
     }
 }
 

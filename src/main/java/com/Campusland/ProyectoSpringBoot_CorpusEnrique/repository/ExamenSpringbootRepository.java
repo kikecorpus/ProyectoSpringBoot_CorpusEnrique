@@ -1,9 +1,7 @@
 package com.Campusland.ProyectoSpringBoot_CorpusEnrique.repository;
 
-import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.RecientesDTO;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.model.MovimientoInventario;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,6 +14,6 @@ public interface ExamenSpringbootRepository extends JpaRepository<MovimientoInve
     //Cantidad total de movimientos registrados.
     //Número de movimientos por tipo (ENTRADA, SALIDA, TRANSFERENCIA).
 
-    RecientesDTO countIdmovimientoAndCountTipoMovimiento();
+    Long countByTipoMovimiento(MovimientoInventario.TipoMovimiento tp);
 
 }

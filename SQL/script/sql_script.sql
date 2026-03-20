@@ -260,3 +260,10 @@ INSERT INTO MovimientoInventario (inventario_origen_id, inventario_destino_id, u
 (6,   NULL, 4, 'AJUSTE', 5,  90,  85,  'AJU-2024-002', 'Ajuste por conteo fisico aceite',        '2024-03-05 15:00:00'),
 (11,  NULL, 5, 'AJUSTE', 10, 300, 290, 'AJU-2024-003', 'Ajuste por conteo fisico lapiceros',     '2024-03-10 10:00:00');
 
+
+ SELECT COUNT(id_movimiento) as cantidadMovimientos, 
+ COUNT( tipo_movimiento = ) as cantidadEntrada 
+ FROM MovimientoInventario m;
+ 
+ 
+ 
