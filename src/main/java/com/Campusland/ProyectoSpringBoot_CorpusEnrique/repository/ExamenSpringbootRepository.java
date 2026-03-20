@@ -11,18 +11,11 @@ import java.util.List;
 @Repository
 public interface ExamenSpringbootRepository extends JpaRepository<MovimientoInventario, Long> {
 
-    @Query(value = """
-        SELECT *
-        FROM MovimientoInventario m
-        ORDER BY id_movimiento DESC
-        LIMIT 10
-        """, nativeQuery = true)
-    List<MovimientoInventario> FindRecientes();
+    List<MovimientoInventario> findTop10ByOrderByIdMovimientoDesc();
 
-    @Query(value = """
-            SELECT COUNT(id_movimiento) as cantidadMovimientos  FROM MovimientoInventario m
-                    GROUP BY tipo_movimiento;
-        """, nativeQuery = true)
+    //Cantidad total de movimientos registrados.
+    //Número de movimientos por tipo (ENTRADA, SALIDA, TRANSFERENCIA).
 
-    RecientesDTO FindReporteExamen();
+    RecientesDTO countIdmovimientoAndCountTipoMovimiento();
+
 }

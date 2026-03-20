@@ -27,6 +27,7 @@ public class ReporteController {
 
     private final ReporteService reporteService;
     private final ExamenSpringbootImpl examen;
+
     @Operation(
             summary = "Reporte general del sistema",
             description = "Retorna un resumen con stock total por bodega y los 10 productos más movidos"
@@ -41,12 +42,14 @@ public class ReporteController {
         return ResponseEntity.ok(reporteService.generarReporteGeneral());
     }
 
+
     @GetMapping("/reporte/basico")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
 
     public ResponseEntity<List<MovimientoInventarioResponse>> reporteGeneral() {
-        return ResponseEntity.ok(examen.reportes);
+        return ResponseEntity.ok(examen.reportes());
 
     }
 }
+
 

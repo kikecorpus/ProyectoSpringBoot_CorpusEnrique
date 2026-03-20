@@ -97,10 +97,10 @@ public class MovimientoInventarioController {
         return ResponseEntity.ok(movimientoService.listarMovimientosPorRangoFechas(desdeDateTime, hastaDateTime));
     }
 
-    @GetMapping("/movimientos/recientes")
+    @GetMapping("/recientes")
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
     public ResponseEntity<List<MovimientoInventarioResponse>> listarRecientes(){
-        return ResponseEntity.ok(examen.listarRecientes());
+        return ResponseEntity.ok(examen.topRecientes());
     }
 
 }
