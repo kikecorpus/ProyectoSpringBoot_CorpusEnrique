@@ -3,6 +3,7 @@ package com.Campusland.ProyectoSpringBoot_CorpusEnrique.controller;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.request.MovimientoInventarioRequest;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.dto.response.MovimientoInventarioResponse;
 import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.MovimientoInventarioService;
+import com.Campusland.ProyectoSpringBoot_CorpusEnrique.service.impl.ExamenSpringbootImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -28,6 +29,7 @@ import java.util.List;
 public class MovimientoInventarioController {
 
     private final MovimientoInventarioService movimientoService;
+    private final ExamenSpringbootImpl examen;
     @Operation(summary = "Crear registro", description = "Guarda un nuevo registro en el sistema")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Registro creado exitosamente"),
@@ -94,4 +96,11 @@ public class MovimientoInventarioController {
         LocalDateTime hastaDateTime = hasta.atTime(23, 59, 59);
         return ResponseEntity.ok(movimientoService.listarMovimientosPorRangoFechas(desdeDateTime, hastaDateTime));
     }
+
+    @GetMapping("/movimientos/recientes")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SUPERVISOR')")
+    public ResponseEntity<List<MovimientoInventarioResponse>> listarRecientes(){
+        return ResponseEntity.ok(examen.listarRecientes());
+    }
+
 }

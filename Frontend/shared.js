@@ -2,7 +2,7 @@
    shared.js  —  API helpers, auth guard, toast, sidebar
    ═══════════════════════════════════════════════════════════ */
 
-const API_BASE = 'http://192.168.32.60:8080';
+const API_BASE = 'http://192.168.32.49:8080';
 
 // Set favicon
 const favicon = document.createElement('link');

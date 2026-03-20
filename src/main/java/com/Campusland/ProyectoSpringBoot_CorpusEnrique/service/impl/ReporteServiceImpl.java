@@ -44,4 +44,5 @@ public class ReporteServiceImpl implements ReporteService {
 
         return new ReporteGeneralResponse(stockPorBodega, productosMasMovidos);
     }
+
 }
